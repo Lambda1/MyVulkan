@@ -1,3 +1,8 @@
+PC
 OS: Windows10 Home
 CPU: Intel(R) Core(TM) i5-7200U 2.50GHz (4CPUs)
 GPU: Intel(R) HD Graphics 620
+
+Vulkan
+API: Vulkan 1.2 API
+Version: 1.2.131.2
