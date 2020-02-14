@@ -1,35 +1,42 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
+class TriangleApplication
+{
+private:
+	// Vulkan初期化
+	void InitVulkan()
+	{
 
-#include <iostream>
-
-int main() {
-	glfwInit();
-
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
-
-	uint32_t extensionCount = 0;
-	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-	std::cout << extensionCount << " extensions supported" << std::endl;
-
-	glm::mat4 matrix;
-	glm::vec4 vec;
-	auto test = matrix * vec;
-
-	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
 	}
 
-	glfwDestroyWindow(window);
+	// プログラム中のMain
+	void MainLoop()
+	{
 
-	glfwTerminate();
+	}
+
+	// リソース解放
+	void CleanUp()
+	{
+
+	}
+public:
+	// 実行
+	// NOTE: 初期化 -> MainLoop -> リソース解放
+	void Run()
+	{
+		InitVulkan();
+		MainLoop();
+		CleanUp();
+	}
+};
+
+int main(int argc, char* argv[])
+{
+	TriangleApplication my_triangle;
+
+	// レンダリング開始
+	my_triangle.Run();
 
 	return 0;
 }
