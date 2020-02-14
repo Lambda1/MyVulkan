@@ -1,0 +1,28 @@
+原文: https://vulkan-tutorial.com/Drawing_a_triangle
+
+General structure
+	プログラムの基本構造:
+		1. InitVulkan
+			VulkanやGLFWなどの初期化
+		2. MainLoop
+			メイン処理
+		3. CleanUp
+			リソース解放
+
+Resouce management
+	modern C++では, スマートポインタによってリソース管理を自動化できるが, Vulkanの良い所はミスを避けるための明示的な処理のため, 学習を兼ねて, スマートポインタを使わずにリソース管理を行う.
+	チュートリアルでは, 「std::shared_ptr」をオーバーロードしてリソース管理の自動化を実装する.
+	大規模なVulkanプログラムでは, RAIIをオススメするが, 学習目的なら何が起きているか把握することを進める.
+	(本プログラムでもこの考えに従って実装を進める.)
+
+Integrating GLFW
+	GLFWについては学習済みのため, 重要部分のみ触れる.
+
+	1. 全体: #include<vulkan/vulkan.h>を以下に変更(追記するだけでもいけるかも?)
+		#define GLFW_INCLUDE_VULKAN
+		#include <GLFW/glfw3.h>
+		GLFWでは, vulkan.hを自動的にロードする.
+	2. InitVulkan(): glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
+		OpenGLコンテキストを生成させない
+	3. CleanUp(): glfwの終了処理
+		glfwDestroyWindow(), glfwTerminate()
