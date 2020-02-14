@@ -1,42 +1,25 @@
-#include <vulkan/vulkan.h>
+#include "./TriangleApplication/TriangleApplication.hpp"
 
-class TriangleApplication
-{
-private:
-	// Vulkan初期化
-	void InitVulkan()
-	{
+#include <iostream>
+#include <stdexcept>
 
-	}
-
-	// プログラム中のMain
-	void MainLoop()
-	{
-
-	}
-
-	// リソース解放
-	void CleanUp()
-	{
-
-	}
-public:
-	// 実行
-	// NOTE: 初期化 -> MainLoop -> リソース解放
-	void Run()
-	{
-		InitVulkan();
-		MainLoop();
-		CleanUp();
-	}
-};
+#define RETURN_MAIN_FAILED 1
+#define RETURN_MAIN_SUCCESS 0
 
 int main(int argc, char* argv[])
 {
 	TriangleApplication my_triangle;
 
-	// レンダリング開始
-	my_triangle.Run();
+	try
+	{
+		// レンダリング開始
+		my_triangle.Run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return RETURN_MAIN_FAILED;
+	}
 
-	return 0;
+	return RETURN_MAIN_SUCCESS;
 }
