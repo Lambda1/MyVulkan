@@ -1,0 +1,31 @@
+原文: https://vulkan-tutorial.com/en/Development_environment#page_Vulkan-SDK
+
+Vulkan SDK
+サンプルディレクトリ: Bin
+ファイルメモ
+	1. glslangValidator.exe: GLSLからバイトコードに変換.
+		-> シェーダプログラムをコンパイルして文法チェックが可能.
+	2. glslc.exe: GLSLからバイトコードに変換.
+		-> Google拡張によるシェーダプログラムの文法チェック.
+Vulkanローダ, 検証用レイヤーのバイナリも含まれる.
+
+ライブラリディレクトリ: Lib
+
+GLFW
+Vulkanはプラットフォーム依存を避けるため, レンダリング結果を表示するウィンドウ生成機能はない.
+ここでは, ネイティブWin32やSDLの代替としてGLFWを使用する.
+(GLFWの基本的な使用方法は, https://github.com/lambda1/my_library.git を参照)
+
+GLM
+DirectX12とは違い, Vulkanは線形代数ライブラリを持たない.(これは, OpenGLと同様)
+ここでは, OpenGLよう線形代数ライブラリを使用する.
+(自作した線形代数ライブラリは, https://github.com/lambda1/my_library.git を参照)
+
+Setting Up Visual Studio
+* チュートリアルとは違ったVisual Studioの設定を記述する.
+* チュートリアルに合わせる場合は, 原文を参照すること.
+
+バージョン
+1. visual Studio 2019
+2. GLFW3.3.2
+3. GLM0.9.9.7
