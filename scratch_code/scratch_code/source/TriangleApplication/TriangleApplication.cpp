@@ -93,9 +93,11 @@ void TriangleApplication::CheckExtension(const char** glfw_extensions, const int
 	// Vulkan拡張機能表示
 	std::cout << "AVAILABLE VULKAN EXTENSIONS:" << std::endl;
 	for (const auto& extension : extensions) { std::cout << "\t" << extension.extensionName << std::endl; }
+	std::cout << std::endl;
 	// GLFW3がサポートするVulkan拡張機能の表示
 	std::cout << "AVAILABLE GLFW VULKAN EXTENSIONS:" << std::endl;
 	for (int i = 0; i < extensions_nums; ++i) { std::cout << "\t" << glfw_extensions[i] << std::endl; }
+	std::cout << std::endl;
 }
 /* --public-- */
 
