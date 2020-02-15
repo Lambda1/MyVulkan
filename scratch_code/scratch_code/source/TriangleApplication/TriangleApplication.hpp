@@ -13,6 +13,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "../VulkanCallBacks/VulkanDebugCallBack_ValidationLayer.hpp"
+
 // 拡張機能情報の表示
 #define DISPLAY_VULKAN_EXTENSION true
 // バリデーションレイヤーの詳細表示
@@ -34,7 +36,8 @@ class TriangleApplication
 #else
 	inline constexpr static bool m_enable_validation_layer = true;
 #endif
-
+	// Vulkan: Debug Messanger
+	VkDebugUtilsMessengerEXT m_debug_messanger;
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -52,6 +55,8 @@ private:
 	/*--Vulkan関係-*/
 	// インスタンス生成
 	void CreateInstance();
+	// デバッグ機能の設定
+	void SetupDebugMessanger();
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);
 	// Validation Layerのサポート判定

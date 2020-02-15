@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\TriangleApplication\TriangleApplication.hpp" />
+    <ClInclude Include="source\VulkanCallBacks\VulkanDebugCallBack_ValidationLayer.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

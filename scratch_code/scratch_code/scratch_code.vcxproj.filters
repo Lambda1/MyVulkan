@@ -19,6 +19,9 @@
     <Filter Include="ヘッダー ファイル\TriangleApplication">
       <UniqueIdentifier>{afd4993b-3591-4a89-9443-4a78991ae032}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\VulkanCallBack">
+      <UniqueIdentifier>{bb40f36e-cbac-4a74-94e6-5632483b01f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">
@@ -31,6 +34,9 @@
   <ItemGroup>
     <ClInclude Include="source\TriangleApplication\TriangleApplication.hpp">
       <Filter>ヘッダー ファイル\TriangleApplication</Filter>
+    </ClInclude>
+    <ClInclude Include="source\VulkanCallBacks\VulkanDebugCallBack_ValidationLayer.hpp">
+      <Filter>ヘッダー ファイル\VulkanCallBack</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

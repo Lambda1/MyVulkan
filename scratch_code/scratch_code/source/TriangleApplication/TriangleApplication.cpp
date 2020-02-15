@@ -101,6 +101,19 @@ void TriangleApplication::CreateInstance()
 #endif
 	
 }
+// Vulkan: デバッグメッセンジャーの設定
+// NOTE: ValidationLayerが有効のとき動作
+void TriangleApplication::SetupDebugMessanger()
+{
+	if (!m_enable_validation_layer) { return; }
+
+	VkDebugUtilsMessengerCreateInfoEXT create_info;
+	create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	create_info.pfnUserCallback = Debug_Call_Back;
+	create_info.pUserData = nullptr;
+}
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
 {
@@ -161,14 +174,14 @@ bool TriangleApplication::CheckValidationLayerSupport()
 // NOTE: デフォルト設定
 TriangleApplication::TriangleApplication() :
 	m_window(nullptr), m_window_width(800), m_window_height(600), m_window_name("Vulkan"),
-	m_vk_instance()
+	m_vk_instance(), m_debug_messanger()
 {
 
 }
 // NOTE: ウィンドウ設定
 TriangleApplication::TriangleApplication(const int& width, const int& height, const std::string& name):
 	m_window(nullptr), m_window_width(width), m_window_height(height), m_window_name(name),
-	m_vk_instance()
+	m_vk_instance(), m_debug_messanger()
 {
 
 }
