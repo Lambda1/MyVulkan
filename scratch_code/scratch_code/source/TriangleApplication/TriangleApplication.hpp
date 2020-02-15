@@ -57,6 +57,7 @@ private:
 	void CreateInstance();
 	// デバッグ機能の設定
 	void SetupDebugMessanger();
+	void DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT &);
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);
 	// Validation Layerのサポート判定

@@ -7,6 +7,8 @@ void TriangleApplication::InitVulkan()
 {
 	// インスタンス生成
 	CreateInstance();
+	// デバッグメッセンジャの設定
+	SetupDebugMessanger();
 }
 
 // メインループ
@@ -24,6 +26,9 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// デバッグメッセンジャ破棄
+	if (m_enable_validation_layer) { Destroy_Debug_Utils_Messenger_EXT(m_vk_instance, m_debug_messanger, nullptr); }
+	// インスタンス破棄
 	vkDestroyInstance(m_vk_instance, nullptr);
 
 	/* --GLFW3の終了処理--*/
@@ -62,6 +67,9 @@ std::vector<const char*> TriangleApplication::RequiredExtensionGLFW()
 // Vulkanインスタンスを生成
 void TriangleApplication::CreateInstance()
 {
+	// Check Validation Layer
+	if (m_enable_validation_layer && !CheckValidationLayerSupport()) { throw std::runtime_error("VALIDATION LAYER IS REQUESTED, BUT NOT AVAILABLE."); }
+
 	// Vulkan Application
 	VkApplicationInfo app_info = {};
 	app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -71,46 +79,62 @@ void TriangleApplication::CreateInstance()
 	app_info.apiVersion = VK_API_VERSION_1_0;
 	app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+
 	// Vulkan Instance Create
 	VkInstanceCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	create_info.pNext = nullptr;
 	create_info.pApplicationInfo = &app_info;
-	if (m_enable_validation_layer)
-	{
-		create_info.enabledLayerCount = static_cast<uint32_t>(m_validation_layer.size());
-		create_info.ppEnabledLayerNames = m_validation_layer.data();
-	}
-	else { create_info.enabledLayerCount = 0; }
 
 	// GLFW
 	auto extensions = RequiredExtensionGLFW();
-	// Enable Global Validation Layer
-	create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-	create_info.ppEnabledExtensionNames = extensions.data();
-	//create_info.enabledLayerCount = 0;
-
-	// Create Vulkan Instance
-	if (vkCreateInstance(&create_info, nullptr, &m_vk_instance) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE VULKAN INSTANCE."); }
-	// Check Validation Layer
-	if (m_enable_validation_layer && !CheckValidationLayerSupport()) { throw std::runtime_error("VALIDATION LAYER IS REQUESTED, BUT NOT AVAILABLE."); }
-
 	// Display Vulkan Extension
 #if DISPLAY_VULKAN_EXTENSION
 	CheckExtension(extensions);
 #endif
-	
+	// Enable Global Validation Layer
+	create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+	create_info.ppEnabledExtensionNames = extensions.data();
+
+	// Debug Setting
+	VkDebugUtilsMessengerCreateInfoEXT debug_create_info;
+	if (m_enable_validation_layer)
+	{
+		create_info.enabledLayerCount = static_cast<uint32_t>(m_validation_layer.size());
+		create_info.ppEnabledLayerNames = m_validation_layer.data();
+		DefaultDebugSetting(debug_create_info);
+		create_info.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debug_create_info);
+	}
+	else
+	{
+		create_info.enabledLayerCount = 0;
+		create_info.pNext = nullptr;
+	}
+
+	// Create Vulkan Instance
+	if (vkCreateInstance(&create_info, nullptr, &m_vk_instance) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE VULKAN INSTANCE."); }
 }
 // Vulkan: デバッグメッセンジャーの設定
 // NOTE: ValidationLayerが有効のとき動作
 void TriangleApplication::SetupDebugMessanger()
 {
 	if (!m_enable_validation_layer) { return; }
-
+	
+	// Debug Messangerの設定
 	VkDebugUtilsMessengerCreateInfoEXT create_info;
+	DefaultDebugSetting(create_info);
+	// コールバックの設定
+	if (Create_Debug_Utils_Messenger_EXT(m_vk_instance, &create_info, nullptr, &m_debug_messanger) != VK_SUCCESS) { throw std::runtime_error("FAILED TO SET UP DEBUG MESSANGER."); }
+}
+// Vulkan: 標準デバッグメッセンジャーの設定
+void TriangleApplication::DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT& create_info)
+{
+	create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	// コールバック時における重要度の設定.
 	create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	// コールバック時におけるメッセージフィルタ(とりあえず, 全指定)
 	create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	// コールバック関数の設定
 	create_info.pfnUserCallback = Debug_Call_Back;
 	create_info.pUserData = nullptr;
 }
