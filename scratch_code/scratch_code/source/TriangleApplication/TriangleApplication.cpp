@@ -63,6 +63,12 @@ void TriangleApplication::CreateInstance()
 	create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	create_info.pNext = nullptr;
 	create_info.pApplicationInfo = &app_info;
+	if (m_enable_validation_layer)
+	{
+		create_info.enabledLayerCount = static_cast<uint32_t>(m_validation_layer.size());
+		create_info.ppEnabledLayerNames = m_validation_layer.data();
+	}
+	else { create_info.enabledLayerCount = 0; }
 
 	// GLFW
 	uint32_t glfw_extension_count = 0;
