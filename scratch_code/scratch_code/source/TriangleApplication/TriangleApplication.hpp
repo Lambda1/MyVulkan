@@ -8,8 +8,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <vector>
 #include <string>
+#include <iostream>
 #include <stdexcept>
+
+#define DISPLAY_VULKAN_EXTENSION true
 
 class TriangleApplication
 {
@@ -31,6 +35,7 @@ private:
 	void InitWindow();
 	/*--VulkanŠÖŒW-*/
 	void CreateInstance();
+	void CheckExtension();
 public:
 	TriangleApplication();
 	TriangleApplication(const int &window_width, const int &window_height, const std::string &window_name);

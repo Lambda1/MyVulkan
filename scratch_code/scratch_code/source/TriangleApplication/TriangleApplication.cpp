@@ -75,8 +75,25 @@ void TriangleApplication::CreateInstance()
 
 	// Create Vulkan Instance
 	if (vkCreateInstance(&create_info, nullptr, &m_vk_instance) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE VULKAN INSTANCE."); }
-}
 
+	// Display Vulkan Extension
+#if DISPLAY_VULKAN_EXTENSION
+	CheckExtension();
+#endif
+}
+// Vulkan拡張機能のチェック
+void TriangleApplication::CheckExtension()
+{
+	uint32_t extension_count = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
+
+	std::vector<VkExtensionProperties> extensions(extension_count);
+	vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
+
+	// 拡張機能表示
+	std::cout << "AVAILABLE EXTENSIONS:" << std::endl;
+	for (const auto& extension : extensions) { std::cout << "\t" << extension.extensionName << std::endl; }
+}
 /* --public-- */
 
 // コンストラクタ
