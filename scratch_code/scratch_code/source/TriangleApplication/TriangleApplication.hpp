@@ -44,13 +44,16 @@ private:
 	void CleanUp();
 
 	/*--GLFW関係--*/
+	// ウィンドウ初期化
 	void InitWindow();
+	// 拡張機能設定
+	std::vector<const char*> RequiredExtensionGLFW();
 
 	/*--Vulkan関係-*/
 	// インスタンス生成
 	void CreateInstance();
 	// 拡張機能表示
-	void CheckExtension(const char** glfw_extensions,const int &extensions_nums);
+	void CheckExtension(const std::vector<const char*> &glfw_extensions);
 	// Validation Layerのサポート判定
 	bool CheckValidationLayerSupport();
 public:
