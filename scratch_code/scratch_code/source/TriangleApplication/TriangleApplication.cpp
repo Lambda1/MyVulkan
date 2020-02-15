@@ -75,16 +75,19 @@ void TriangleApplication::CreateInstance()
 
 	// Create Vulkan Instance
 	if (vkCreateInstance(&create_info, nullptr, &m_vk_instance) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE VULKAN INSTANCE."); }
+	// Check Validation Layer
+	if (m_enable_validation_layer && !CheckValidationLayerSupport()) { throw std::runtime_error("VALIDATION LAYER IS REQUESTED, BUT NOT AVAILABLE."); }
 
 	// Display Vulkan Extension
 #if DISPLAY_VULKAN_EXTENSION
 	CheckExtension(glfw_extension, static_cast<int>(glfw_extension_count));
 #endif
+	
 }
-// Vulkan拡張機能のチェック
+// Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const char** glfw_extensions, const int& extensions_nums)
 {
-	// Vulkan拡張機能の個数取得
+	// Vulkan拡張機能数の取得
 	uint32_t extension_count = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
 	// Vulkan拡張機能の取得
@@ -99,6 +102,42 @@ void TriangleApplication::CheckExtension(const char** glfw_extensions, const int
 	for (int i = 0; i < extensions_nums; ++i) { std::cout << "\t" << glfw_extensions[i] << std::endl; }
 	std::cout << std::endl;
 }
+// Vulkan: Validation Layerのサポート確認
+bool TriangleApplication::CheckValidationLayerSupport()
+{
+	// レイヤー数取得
+	uint32_t layer_count;
+	vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
+	// レイヤー取得
+	std::vector<VkLayerProperties> layers(layer_count);
+	vkEnumerateInstanceLayerProperties(&layer_count, layers.data());
+
+	// 取得したレイヤーにm_validation_layerが含まれているかチェック
+	for (const char* layer_name : m_validation_layer)
+	{
+		bool is_layer_found = false;
+		for (const auto& layer_properties : layers)
+		{
+			// レイヤー詳細の表示
+#ifdef DISPLAY_VULKAN_VALIDATION_LAYER_DETAIL
+			std::cout << layer_properties.layerName << ": " << layer_properties.description << std::endl;
+			std::cout << "IMPLEMENT VERSION: " << layer_properties.implementationVersion << std::endl;
+			std::cout << "SPECIFICATION VERSION: " << layer_properties.specVersion << std::endl << std::endl;
+#endif
+			// レイヤーが存在する場合, 次を走査
+			if (std::string(layer_name) == std::string(layer_properties.layerName)) { is_layer_found = true; break; }
+		}
+		// レイヤーが存在しない場合, レイヤー名を表示して走査を終了
+		if (!is_layer_found)
+		{
+			std::cout << "NOT FOUND VALIDATION LAYER: " << layer_name << std::endl << std::endl;;
+			return false;
+		}
+	}
+
+	return true;
+}
+
 /* --public-- */
 
 // コンストラクタ
