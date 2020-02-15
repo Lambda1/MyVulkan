@@ -35,7 +35,7 @@ private:
 	void InitWindow();
 	/*--VulkanŠÖŒW-*/
 	void CreateInstance();
-	void CheckExtension();
+	void CheckExtension(const char** glfw_extensions,const int &extensions_nums);
 public:
 	TriangleApplication();
 	TriangleApplication(const int &window_width, const int &window_height, const std::string &window_name);

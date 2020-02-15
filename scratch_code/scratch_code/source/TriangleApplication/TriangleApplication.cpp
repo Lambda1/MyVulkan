@@ -78,21 +78,24 @@ void TriangleApplication::CreateInstance()
 
 	// Display Vulkan Extension
 #if DISPLAY_VULKAN_EXTENSION
-	CheckExtension();
+	CheckExtension(glfw_extension, static_cast<int>(glfw_extension_count));
 #endif
 }
 // Vulkan拡張機能のチェック
-void TriangleApplication::CheckExtension()
+void TriangleApplication::CheckExtension(const char** glfw_extensions, const int& extensions_nums)
 {
+	// Vulkan拡張機能の個数取得
 	uint32_t extension_count = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-
+	// Vulkan拡張機能の取得
 	std::vector<VkExtensionProperties> extensions(extension_count);
 	vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
-
-	// 拡張機能表示
-	std::cout << "AVAILABLE EXTENSIONS:" << std::endl;
+	// Vulkan拡張機能表示
+	std::cout << "AVAILABLE VULKAN EXTENSIONS:" << std::endl;
 	for (const auto& extension : extensions) { std::cout << "\t" << extension.extensionName << std::endl; }
+	// GLFW3がサポートするVulkan拡張機能の表示
+	std::cout << "AVAILABLE GLFW VULKAN EXTENSIONS:" << std::endl;
+	for (int i = 0; i < extensions_nums; ++i) { std::cout << "\t" << glfw_extensions[i] << std::endl; }
 }
 /* --public-- */
 
