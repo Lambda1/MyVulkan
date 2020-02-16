@@ -13,17 +13,21 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "../QueueFamilies/QueueFamilies.hpp"
 #include "../VulkanCallBacks/VulkanDebugCallBack_ValidationLayer.hpp"
 
 // 拡張機能情報の表示
 #define DISPLAY_VULKAN_EXTENSION true
 // バリデーションレイヤーの詳細表示
 #define DISPLAY_VULKAN_VALIDATION_LAYER_DETAIL true
+// 物理デバイス情報の表示
+#define DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL true
 
 #define NDEBUG
 
 class TriangleApplication
 {
+private:
 	// ウィンドウ関係
 	GLFWwindow* m_window;
 	const int m_window_width, m_window_height;
@@ -40,6 +44,8 @@ class TriangleApplication
 #endif
 	// Vulkan: Debug Messanger
 	VkDebugUtilsMessengerEXT m_debug_messanger;
+	// Vulkan: Physical Device
+	VkPhysicalDevice m_physical_device; // 自動解放対象
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -60,10 +66,17 @@ private:
 	// デバッグ機能の設定
 	void SetupDebugMessanger();
 	void DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT &);
+	// 物理デバイスの設定
+	void PickUpPhysicalDevice();
+	bool isDeviceSuitable(const VkPhysicalDevice &device);
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);
 	// Validation Layerのサポート判定
 	bool CheckValidationLayerSupport();
+	// 物理デバイス情報の表示
+	void CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperties &prop, const VkPhysicalDeviceFeatures &feature);
 public:
 	TriangleApplication();
 	TriangleApplication(const int &window_width, const int &window_height, const std::string &window_name);
