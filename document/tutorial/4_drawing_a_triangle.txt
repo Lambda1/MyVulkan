@@ -34,3 +34,18 @@ Validation Layers
 	NDEBUGマクロで管理するのがオススメ.
 	基本的にはメッセージ取得関数へのポインタを介して, デバッグ機能の生成と破棄を行う.
 	(本開発環境では, PCメーカがドライバ更新をしていないのでこの機能を使えなかった.)
+
+Physical devices and queue families
+	Selecting a physical device
+		VkInstanceによってVulkanライブラリを初期化後は, グラフィックカードを設定が必要.
+		複数のグラフィックカードがある場合は, 任意のモノを選択するようにプログラムを構築すると良い.
+		(ここでは, 1つだけ)
+	Base device suitability checks
+		デバイスの適合度の照会をする.
+		VulkanバージョンやGPUドライバ, VR用設定が可能かが確認できる.
+		(例えば, VulkanSDKは最新だが, 使用しているグラフィックカードのVulkanAPIが古い場合は, 最新の機能を使えないなど)
+		(VulkanAPIのバージョンが1.0.31だったので, validation layerが作動しない原因がここで判明?)
+	Queue families
+		描画からテクスチャのアップロードに至るまで, Vulkanの操作の大部分はコマンドキューで行う.
+		デバイスでサポートしているキューファミリの設定を行う.
+		現時点では, グラフィックコマンドをサポートするキューファミリだけを対象.
