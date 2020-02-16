@@ -151,31 +151,50 @@ void TriangleApplication::PickUpPhysicalDevice()
 	std::vector<VkPhysicalDevice> devices(device_count);
 	vkEnumeratePhysicalDevices(m_vk_instance, &device_count, devices.data());
 	for (const auto& device : devices) { if (isDeviceSuitable(device)) { m_physical_device = device; break; } }
+	// 割り当て失敗
 	if (m_physical_device == VK_NULL_HANDLE) { throw std::runtime_error("FAILD TO FIND A SUITABLE GPU."); }
 }
 // Vulkan: グラフィックカードの適合性評価
 // NOTE: 一番価値の高いGPUを選択するなど, 実装方法は様々.
 bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 {
+	QueueFamilyIndices indices = FindQueueFamilies(device);
+
+	// DEBUG用print
+#if DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL
 	// Basic Property (name, type, Vulkan version...)
 	VkPhysicalDeviceProperties device_properties;
 	vkGetPhysicalDeviceProperties(device, &device_properties);
 	// Optional Functions (texture compression, 64bit-floats and multi viewport rendering (useful for VR))
 	VkPhysicalDeviceFeatures device_features;
 	vkGetPhysicalDeviceFeatures(device, &device_features);
-
-#ifdef DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL
+	// Display
 	CheckPhysicalDeviceInfo(device_properties, device_features);
 #endif
 
-	return true;
+	return indices.isComplete();
 }
 // Vulkan: グラフィックコマンドをサポートするキューファミリの検索
 // MEMO: キューファミリ (GPUに仕事を依頼するコマンド群)
-QueueFamilyIndices TriangleApplication::FindQueueFamilies(VkPhysicalDevice device)
+QueueFamilyIndices TriangleApplication::FindQueueFamilies(const VkPhysicalDevice &device)
 {
+	// キューファミリのリストを取得
+	uint32_t queue_families_count = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_families_count, nullptr);
+	std::vector<VkQueueFamilyProperties> queue_families(queue_families_count);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_families_count, queue_families.data());
+	
+	// VK_QUEUE_GRAPHICS_BITをサポートするキューを探索
 	QueueFamilyIndices indices;
-
+	int idx = 0;
+	for (const auto& queue_family : queue_families)
+	{
+		// キュー番号を登録
+		if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) { indices.graphics_family = idx; }
+		// 既に値を保持している場合は, 探索終了
+		if (indices.isComplete()) { break; }
+		++idx;
+	}
 	return indices;
 }
 // Vulkan: 拡張機能のチェック

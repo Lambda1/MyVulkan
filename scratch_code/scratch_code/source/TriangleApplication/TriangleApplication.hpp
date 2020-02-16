@@ -69,7 +69,7 @@ private:
 	// 物理デバイスの設定
 	void PickUpPhysicalDevice();
 	bool isDeviceSuitable(const VkPhysicalDevice &device);
-	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+	QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& device);
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);
