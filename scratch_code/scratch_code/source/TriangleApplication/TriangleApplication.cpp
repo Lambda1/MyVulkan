@@ -239,7 +239,7 @@ void TriangleApplication::CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperti
 	std::cout << "\t" << "API VERSION: " << VK_VERSION_MAJOR(prop.apiVersion) << "." << VK_VERSION_MINOR(prop.apiVersion) << "." << VK_VERSION_PATCH(prop.apiVersion) << std::endl;
 	std::cout << "\t" << "DEVICE(Name, ID, Type): " << prop.deviceName << " , " << prop.deviceID << " , " << prop.deviceType << std::endl;
 	std::cout << "\t" << "DRIVER VERSION: " << prop.driverVersion << std::endl;
-	std::cout << "\t" << "VENDER IS: " << prop.vendorID << std::endl << std::endl;
+	std::cout << "\t" << "VENDER ID: " << prop.vendorID << std::endl << std::endl;
 	// オプション機能
 	std::cout << "\t" << "GEOMETRY SHADER: " << std::boolalpha << static_cast<bool>(feature.geometryShader) << std::endl;
 	std::cout << "\t" << "TESSELLEATION SHADER: " << std::boolalpha << static_cast<bool>(feature.tessellationShader) << std::endl;
