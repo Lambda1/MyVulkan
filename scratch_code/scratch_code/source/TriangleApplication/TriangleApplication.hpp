@@ -20,6 +20,8 @@
 // バリデーションレイヤーの詳細表示
 #define DISPLAY_VULKAN_VALIDATION_LAYER_DETAIL true
 
+#define NDEBUG
+
 class TriangleApplication
 {
 	// ウィンドウ関係
