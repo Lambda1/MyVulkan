@@ -9,6 +9,8 @@ void TriangleApplication::InitVulkan()
 	CreateInstance();
 	// デバッグメッセンジャの設定
 	SetupDebugMessanger();
+	// 物理デバイスの設定
+	PickUpPhysicalDevice();
 }
 
 // メインループ
@@ -138,6 +140,63 @@ void TriangleApplication::DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT
 	create_info.pfnUserCallback = Debug_Call_Back;
 	create_info.pUserData = nullptr;
 }
+// Vulkan: 物理デバイスの設定
+void TriangleApplication::PickUpPhysicalDevice()
+{
+	// デバイス個数のチェック
+	uint32_t device_count = 0;
+	vkEnumeratePhysicalDevices(m_vk_instance, &device_count, nullptr);
+	if (device_count == 0) { throw std::runtime_error("FAILD TO FIND GPUS WITH VULKAN SUPPORT."); }
+	// メモリ割り当て
+	std::vector<VkPhysicalDevice> devices(device_count);
+	vkEnumeratePhysicalDevices(m_vk_instance, &device_count, devices.data());
+	for (const auto& device : devices) { if (isDeviceSuitable(device)) { m_physical_device = device; break; } }
+	// 割り当て失敗
+	if (m_physical_device == VK_NULL_HANDLE) { throw std::runtime_error("FAILD TO FIND A SUITABLE GPU."); }
+}
+// Vulkan: グラフィックカードの適合性評価
+// NOTE: 一番価値の高いGPUを選択するなど, 実装方法は様々.
+bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
+{
+	QueueFamilyIndices indices = FindQueueFamilies(device);
+
+	// DEBUG用print
+#if DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL
+	// Basic Property (name, type, Vulkan version...)
+	VkPhysicalDeviceProperties device_properties;
+	vkGetPhysicalDeviceProperties(device, &device_properties);
+	// Optional Functions (texture compression, 64bit-floats and multi viewport rendering (useful for VR))
+	VkPhysicalDeviceFeatures device_features;
+	vkGetPhysicalDeviceFeatures(device, &device_features);
+	// Display
+	CheckPhysicalDeviceInfo(device_properties, device_features);
+#endif
+
+	return indices.isComplete();
+}
+// Vulkan: グラフィックコマンドをサポートするキューファミリの検索
+// MEMO: キューファミリ (GPUに仕事を依頼するコマンド群)
+QueueFamilyIndices TriangleApplication::FindQueueFamilies(const VkPhysicalDevice &device)
+{
+	// キューファミリのリストを取得
+	uint32_t queue_families_count = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_families_count, nullptr);
+	std::vector<VkQueueFamilyProperties> queue_families(queue_families_count);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_families_count, queue_families.data());
+	
+	// VK_QUEUE_GRAPHICS_BITをサポートするキューを探索
+	QueueFamilyIndices indices;
+	int idx = 0;
+	for (const auto& queue_family : queue_families)
+	{
+		// キュー番号を登録
+		if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) { indices.graphics_family = idx; }
+		// 既に値を保持している場合は, 探索終了
+		if (indices.isComplete()) { break; }
+		++idx;
+	}
+	return indices;
+}
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
 {
@@ -191,6 +250,19 @@ bool TriangleApplication::CheckValidationLayerSupport()
 
 	return true;
 }
+// Vulkan: 物理デバイス情報の表示
+void TriangleApplication::CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperties& prop, const VkPhysicalDeviceFeatures& feature)
+{
+	// 基本情報
+	std::cout << "PHYSICAL DEVICE PROPERTIES" << std::endl;
+	std::cout << "\t" << "API VERSION: " << VK_VERSION_MAJOR(prop.apiVersion) << "." << VK_VERSION_MINOR(prop.apiVersion) << "." << VK_VERSION_PATCH(prop.apiVersion) << std::endl;
+	std::cout << "\t" << "DEVICE(Name, ID, Type): " << prop.deviceName << " , " << prop.deviceID << " , " << prop.deviceType << std::endl;
+	std::cout << "\t" << "DRIVER VERSION: " << prop.driverVersion << std::endl;
+	std::cout << "\t" << "VENDER ID: " << prop.vendorID << std::endl << std::endl;
+	// オプション機能
+	std::cout << "\t" << "GEOMETRY SHADER: " << std::boolalpha << static_cast<bool>(feature.geometryShader) << std::endl;
+	std::cout << "\t" << "TESSELLEATION SHADER: " << std::boolalpha << static_cast<bool>(feature.tessellationShader) << std::endl;
+}
 
 /* --public-- */
 
@@ -198,14 +270,14 @@ bool TriangleApplication::CheckValidationLayerSupport()
 // NOTE: デフォルト設定
 TriangleApplication::TriangleApplication() :
 	m_window(nullptr), m_window_width(800), m_window_height(600), m_window_name("Vulkan"),
-	m_vk_instance(), m_debug_messanger()
+	m_vk_instance(), m_debug_messanger(), m_physical_device(VK_NULL_HANDLE)
 {
 
 }
 // NOTE: ウィンドウ設定
 TriangleApplication::TriangleApplication(const int& width, const int& height, const std::string& name):
 	m_window(nullptr), m_window_width(width), m_window_height(height), m_window_name(name),
-	m_vk_instance(), m_debug_messanger()
+	m_vk_instance(), m_debug_messanger(), m_physical_device(VK_NULL_HANDLE)
 {
 
 }

@@ -23,6 +23,7 @@
     <ClCompile Include="source\TriangleApplication\TriangleApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\QueueFamilies\QueueFamilies.hpp" />
     <ClInclude Include="source\TriangleApplication\TriangleApplication.hpp" />
     <ClInclude Include="source\VulkanCallBacks\VulkanDebugCallBack_ValidationLayer.hpp" />
   </ItemGroup>
