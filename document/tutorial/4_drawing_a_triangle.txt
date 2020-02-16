@@ -26,3 +26,11 @@ Integrating GLFW
 		OpenGLコンテキストを生成させない
 	3. CleanUp(): glfwの終了処理
 		glfwDestroyWindow(), glfwTerminate()
+
+Validation Layers
+	Vulkanのデバッグを容易にする機能.
+	リソースリークやパラメータ間違えを防ぐ.
+	Vulkan実態にはvalidation layerは含まれていないが, LunarG Vulkan SDKに含まれている.
+	NDEBUGマクロで管理するのがオススメ.
+	基本的にはメッセージ取得関数へのポインタを介して, デバッグ機能の生成と破棄を行う.
+	(本開発環境では, PCメーカがドライバ更新をしていないのでこの機能を使えなかった.)
