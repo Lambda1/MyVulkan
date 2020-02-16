@@ -33,7 +33,6 @@ inline VkResult Create_Debug_Utils_Messenger_EXT
 {
 	// vkCreateDebugUtilsMessengerEXTŠÖ”
 	auto create_func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
-	std::cout << create_func << std::endl;
 	if (create_func != nullptr) { return create_func(instance, p_create_info, p_allocator, p_debug_messanger); }
 	else { return VK_ERROR_EXTENSION_NOT_PRESENT; }
 }

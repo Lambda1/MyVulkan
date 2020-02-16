@@ -68,7 +68,7 @@ std::vector<const char*> TriangleApplication::RequiredExtensionGLFW()
 void TriangleApplication::CreateInstance()
 {
 	// Check Validation Layer
-	if (m_enable_validation_layer && !CheckValidationLayerSupport()) { throw std::runtime_error("VALIDATION LAYER IS REQUESTED, BUT NOT AVAILABLE."); }
+	if (!CheckValidationLayerSupport() && m_enable_validation_layer) { throw std::runtime_error("VALIDATION LAYER IS REQUESTED, BUT NOT AVAILABLE."); }
 
 	// Vulkan Application
 	VkApplicationInfo app_info = {};
