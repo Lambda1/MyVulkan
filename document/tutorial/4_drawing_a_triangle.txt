@@ -49,3 +49,16 @@ Physical devices and queue families
 		描画からテクスチャのアップロードに至るまで, Vulkanの操作の大部分はコマンドキューで行う.
 		デバイスでサポートしているキューファミリの設定を行う.
 		現時点では, グラフィックコマンドをサポートするキューファミリだけを対象.
+
+Logical device and queues
+	物理デバイスを選択後, それとインターフェースをとる論理デバイスの設定を行う.
+	論理デバイス作成は, インスタンス作成の手順と似ている.
+	Specifying the queues to be created
+		キューファミリの設定.
+	Specifying used device features
+		ジオメトリシェーダなどのような, 拡張機能を使用する場合は, ここで設定.
+	Creating the logical device
+		古い実装と互換性を保つために, レイヤー設定はした方が良い.
+	Retrieving queue handles
+		キューは論理デバイスと共に作成されるが, それとインターフェースを取るハンドルはない.
+		ここでは, グラフィックスキューとハンドルを取るための設定を行う.
