@@ -32,6 +32,7 @@ void TriangleApplication::CleanUp()
 	if (m_enable_validation_layer) { Destroy_Debug_Utils_Messenger_EXT(m_vk_instance, m_debug_messanger, nullptr); }
 	// インスタンス破棄
 	vkDestroyInstance(m_vk_instance, nullptr);
+	vkDestroyDevice(m_logical_device, nullptr);
 
 	/* --GLFW3の終了処理--*/
 	glfwDestroyWindow(m_window);
@@ -197,6 +198,46 @@ QueueFamilyIndices TriangleApplication::FindQueueFamilies(const VkPhysicalDevice
 	}
 	return indices;
 }
+// Vulkan: 論理デバイスの設定
+void TriangleApplication::CreateLogicalDevice()
+{
+	// グラフィックカードのキューファミリを設定
+	QueueFamilyIndices indices = FindQueueFamilies(m_physical_device);
+	VkDeviceQueueCreateInfo queue_create_info = {};
+	queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queue_create_info.queueFamilyIndex = indices.graphics_family.value();
+	queue_create_info.queueCount = 1;
+	// キューの優先度を設定 (0.0-1.0)
+	float queue_priority = 1.0f;
+	queue_create_info.pQueuePriorities = &queue_priority;
+
+	// デバイス機能の設定
+	// NOTE: ジオメトリシェーダ機能の設定などに使用(現時点では, 特に設定はしない).
+	VkPhysicalDeviceFeatures device_features = {};
+
+	// 論理デバイスの作成
+	VkDeviceCreateInfo create_info = {};
+	create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	create_info.pQueueCreateInfos = &queue_create_info;
+	create_info.queueCreateInfoCount = 1;
+	create_info.pEnabledFeatures = &device_features;
+	// NOTE: enabledLayerCountとppEnableLayerNamesは必要ないが, 互換性を保つため設定する.
+	// NOTE: 現時点では, デバイス拡張機能の設定はしない.
+	create_info.enabledExtensionCount = 0;
+	if (m_enable_validation_layer)
+	{
+		create_info.enabledLayerCount = static_cast<uint32_t>(m_validation_layer.size());
+		create_info.ppEnabledLayerNames = m_validation_layer.data();
+	}
+	else { create_info.enabledLayerCount = 0; }
+
+	// 論理デバイスのインスタンス化
+	if (vkCreateDevice(m_physical_device, &create_info, nullptr, &m_logical_device) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE LOGICAL DEVICE."); }
+
+	// 論理デバイスとキューを紐づける(キューハンドル).
+	// NOTE: 単一のキューなので, 0を指定.
+	vkGetDeviceQueue(m_logical_device, indices.graphics_family.value(), 0, &m_graphics_queue);
+}
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
 {
@@ -269,15 +310,19 @@ void TriangleApplication::CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperti
 // コンストラクタ
 // NOTE: デフォルト設定
 TriangleApplication::TriangleApplication() :
-	m_window(nullptr), m_window_width(800), m_window_height(600), m_window_name("Vulkan"),
-	m_vk_instance(), m_debug_messanger(), m_physical_device(VK_NULL_HANDLE)
+	m_window(nullptr), m_window_width(800), m_window_height(600), m_window_name("Vulkan Apps"),
+	m_vk_instance(), m_debug_messanger(),
+	m_physical_device(VK_NULL_HANDLE),
+	m_logical_device(), m_graphics_queue()
 {
 
 }
 // NOTE: ウィンドウ設定
 TriangleApplication::TriangleApplication(const int& width, const int& height, const std::string& name):
 	m_window(nullptr), m_window_width(width), m_window_height(height), m_window_name(name),
-	m_vk_instance(), m_debug_messanger(), m_physical_device(VK_NULL_HANDLE)
+	m_vk_instance(), m_debug_messanger(),
+	m_physical_device(VK_NULL_HANDLE),
+	m_logical_device(), m_graphics_queue()
 {
 
 }

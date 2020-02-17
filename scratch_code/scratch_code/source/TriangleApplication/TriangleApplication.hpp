@@ -46,6 +46,9 @@ private:
 	VkDebugUtilsMessengerEXT m_debug_messanger;
 	// Vulkan: Physical Device
 	VkPhysicalDevice m_physical_device; // 自動解放対象
+	// Vulkan: Logical Device
+	VkDevice m_logical_device;
+	VkQueue m_graphics_queue;  // 論理デバイスと共に解放(自動解放)
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -70,6 +73,8 @@ private:
 	void PickUpPhysicalDevice();
 	bool isDeviceSuitable(const VkPhysicalDevice &device);
 	QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& device);
+	// 論理デバイスの設定
+	void CreateLogicalDevice();
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);
