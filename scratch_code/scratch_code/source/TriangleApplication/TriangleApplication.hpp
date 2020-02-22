@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
+#include <set>
 #include <string>
 #include <iostream>
 #include <stdexcept>
@@ -50,7 +51,9 @@ private:
 	VkPhysicalDevice m_physical_device; // 自動解放対象
 	// Vulkan: Logical Device
 	VkDevice m_logical_device;
-	VkQueue m_graphics_queue;  // 論理デバイスと共に解放(自動解放)
+	// Vulkan: Queue
+	VkQueue m_graphics_queue; // 論理デバイスと共に解放(自動解放)
+	VkQueue m_present_queue;  // 自動解放対象
 private:
 	// Vulkan初期化
 	void InitVulkan();

@@ -218,13 +218,25 @@ void TriangleApplication::CreateLogicalDevice()
 {
 	// グラフィックカードのキューファミリを設定
 	QueueFamilyIndices indices = FindQueueFamilies(m_physical_device);
-	VkDeviceQueueCreateInfo queue_create_info = {};
-	queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queue_create_info.queueFamilyIndex = indices.graphics_family.value();
-	queue_create_info.queueCount = 1;
+	
+	std::vector<VkDeviceQueueCreateInfo> queue_create_multi_info = {};
+	std::set<uint32_t> unique_queue_families = { indices.graphics_family.value(), indices.present_family.value() };
+
+	/*
+
+	*/
+	
 	// キューの優先度を設定 (0.0-1.0)
 	float queue_priority = 1.0f;
-	queue_create_info.pQueuePriorities = &queue_priority;
+	for (uint32_t queue_family : unique_queue_families)
+	{
+		VkDeviceQueueCreateInfo queue_create_info = {};
+		queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queue_create_info.queueFamilyIndex = indices.graphics_family.value();
+		queue_create_info.queueCount = 1;
+		queue_create_info.pQueuePriorities = &queue_priority;
+		queue_create_multi_info.push_back(queue_create_info);
+	}
 
 	// デバイス機能の設定
 	// NOTE: ジオメトリシェーダ機能の設定などに使用(現時点では, 特に設定はしない).
@@ -233,8 +245,8 @@ void TriangleApplication::CreateLogicalDevice()
 	// 論理デバイスの作成
 	VkDeviceCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	create_info.pQueueCreateInfos = &queue_create_info;
-	create_info.queueCreateInfoCount = 1;
+	create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_multi_info.size());
+	create_info.pQueueCreateInfos = queue_create_multi_info.data();
 	create_info.pEnabledFeatures = &device_features;
 	// NOTE: enabledLayerCountとppEnableLayerNamesは必要ないが, 互換性を保つため設定する.
 	// NOTE: 現時点では, デバイス拡張機能の設定はしない.
@@ -249,9 +261,10 @@ void TriangleApplication::CreateLogicalDevice()
 	// 論理デバイスのインスタンス化
 	if (vkCreateDevice(m_physical_device, &create_info, nullptr, &m_logical_device) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE LOGICAL DEVICE."); }
 
-	// 論理デバイスとキューを紐づける(キューハンドル).
+	// キューハンドル取得
 	// NOTE: 単一のキューなので, 0を指定.
 	vkGetDeviceQueue(m_logical_device, indices.graphics_family.value(), 0, &m_graphics_queue);
+	vkGetDeviceQueue(m_logical_device, indices.present_family.value(), 0, &m_present_queue);
 }
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
@@ -329,7 +342,8 @@ TriangleApplication::TriangleApplication() :
 	m_vk_instance(), m_debug_messanger(),
 	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
-	m_logical_device(), m_graphics_queue()
+	m_logical_device(),
+	m_graphics_queue(), m_present_queue()
 {
 
 }
@@ -339,7 +353,8 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_vk_instance(), m_debug_messanger(),
 	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
-	m_logical_device(), m_graphics_queue()
+	m_logical_device(),
+	m_graphics_queue(), m_present_queue()
 {
 
 }
