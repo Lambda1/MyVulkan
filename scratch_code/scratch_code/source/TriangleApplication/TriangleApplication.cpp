@@ -9,6 +9,8 @@ void TriangleApplication::InitVulkan()
 	CreateInstance();
 	// デバッグメッセンジャの設定
 	SetupDebugMessanger();
+	// ウィンドウサーフェス生成
+	CreateSurface();
 	// 物理デバイスの設定
 	PickUpPhysicalDevice();
 }
@@ -30,6 +32,8 @@ void TriangleApplication::CleanUp()
 	/* --Vulkanの終了処理-- */
 	// デバッグメッセンジャ破棄
 	if (m_enable_validation_layer) { Destroy_Debug_Utils_Messenger_EXT(m_vk_instance, m_debug_messanger, nullptr); }
+	// ウィンドウサーフェスの破棄
+	vkDestroySurfaceKHR(m_vk_instance, m_surface, nullptr);
 	// インスタンス破棄
 	vkDestroyInstance(m_vk_instance, nullptr);
 	vkDestroyDevice(m_logical_device, nullptr);
@@ -127,6 +131,11 @@ void TriangleApplication::SetupDebugMessanger()
 	DefaultDebugSetting(create_info);
 	// コールバックの設定
 	if (Create_Debug_Utils_Messenger_EXT(m_vk_instance, &create_info, nullptr, &m_debug_messanger) != VK_SUCCESS) { throw std::runtime_error("FAILED TO SET UP DEBUG MESSANGER."); }
+}
+// Vulkan: ウィンドウサーフェスの生成
+void TriangleApplication::CreateSurface()
+{
+	if (glfwCreateWindowSurface(m_vk_instance, m_window, nullptr, &m_surface) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE WINDOW SURFACE."); }
 }
 // Vulkan: 標準デバッグメッセンジャーの設定
 void TriangleApplication::DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT& create_info)
@@ -312,6 +321,7 @@ void TriangleApplication::CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperti
 TriangleApplication::TriangleApplication() :
 	m_window(nullptr), m_window_width(800), m_window_height(600), m_window_name("Vulkan Apps"),
 	m_vk_instance(), m_debug_messanger(),
+	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(), m_graphics_queue()
 {
@@ -321,6 +331,7 @@ TriangleApplication::TriangleApplication() :
 TriangleApplication::TriangleApplication(const int& width, const int& height, const std::string& name):
 	m_window(nullptr), m_window_width(width), m_window_height(height), m_window_name(name),
 	m_vk_instance(), m_debug_messanger(),
+	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(), m_graphics_queue()
 {

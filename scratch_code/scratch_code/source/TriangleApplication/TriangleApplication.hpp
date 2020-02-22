@@ -44,6 +44,8 @@ private:
 #endif
 	// Vulkan: Debug Messanger
 	VkDebugUtilsMessengerEXT m_debug_messanger;
+	// Vulkan: Window Surface
+	VkSurfaceKHR m_surface;
 	// Vulkan: Physical Device
 	VkPhysicalDevice m_physical_device; // 自動解放対象
 	// Vulkan: Logical Device
@@ -66,6 +68,8 @@ private:
 	/*--Vulkan関係-*/
 	// インスタンス生成
 	void CreateInstance();
+	// サーフェス生成
+	void CreateSurface();
 	// デバッグ機能の設定
 	void SetupDebugMessanger();
 	void DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT &);
