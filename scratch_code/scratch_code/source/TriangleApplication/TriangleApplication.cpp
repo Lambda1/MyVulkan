@@ -184,7 +184,7 @@ bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 
 	return indices.isComplete();
 }
-// Vulkan: グラフィックコマンドをサポートするキューファミリの検索
+// Vulkan: キューファミリの検索(graphic, present)
 // MEMO: キューファミリ (GPUに仕事を依頼するコマンド群)
 QueueFamilyIndices TriangleApplication::FindQueueFamilies(const VkPhysicalDevice &device)
 {
@@ -201,6 +201,12 @@ QueueFamilyIndices TriangleApplication::FindQueueFamilies(const VkPhysicalDevice
 	{
 		// キュー番号を登録
 		if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) { indices.graphics_family = idx; }
+
+		VkBool32 present_support = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, idx, m_surface, &present_support);
+		// presentチェック
+		if (present_support) { indices.present_family = idx; }
+
 		// 既に値を保持している場合は, 探索終了
 		if (indices.isComplete()) { break; }
 		++idx;
