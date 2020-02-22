@@ -32,17 +32,20 @@ private:
 	// ウィンドウ関係
 	GLFWwindow* m_window;
 	const int m_window_width, m_window_height;
-	const std::string m_window_name;
-	
-	// Vulkan: Instance
-	VkInstance m_vk_instance;
+	const std::string m_window_name;	
+
+	// Vulkan: const
 	// Vulkan: Validation Layer
 	const std::vector<const char*> m_validation_layer = { "VK_LAYER_KHRONOS_validation" };
+	// Vulkan: Swap Chain
+	const std::vector<const char*> m_device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 #ifdef NDEBUG
 	inline constexpr static bool m_enable_validation_layer = false;
 #else
 	inline constexpr static bool m_enable_validation_layer = true;
 #endif
+	// Vulkan: Instance
+	VkInstance m_vk_instance;
 	// Vulkan: Debug Messanger
 	VkDebugUtilsMessengerEXT m_debug_messanger;
 	// Vulkan: Window Surface
@@ -73,15 +76,17 @@ private:
 	void CreateInstance();
 	// サーフェス生成
 	void CreateSurface();
-	// デバッグ機能の設定
+	// デバッグ機能設定
 	void SetupDebugMessanger();
 	void DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT &);
-	// 物理デバイスの設定
+	// 物理デバイス設定
 	void PickUpPhysicalDevice();
 	bool isDeviceSuitable(const VkPhysicalDevice &device);
 	QueueFamilyIndices FindQueueFamilies(const VkPhysicalDevice& device);
-	// 論理デバイスの設定
+	// 論理デバイス設定
 	void CreateLogicalDevice();
+	// スワップチェーン設定
+	bool CheckDeviceExtensionSupport(const VkPhysicalDevice &device);
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);

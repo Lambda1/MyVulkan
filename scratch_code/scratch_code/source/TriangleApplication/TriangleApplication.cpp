@@ -170,6 +170,8 @@ bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 {
 	QueueFamilyIndices indices = FindQueueFamilies(device);
 
+	bool is_extension_supported = CheckDeviceExtensionSupport(device);
+
 	// DEBUG用print
 #if DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL
 	// Basic Property (name, type, Vulkan version...)
@@ -182,7 +184,7 @@ bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 	CheckPhysicalDeviceInfo(device_properties, device_features);
 #endif
 
-	return indices.isComplete();
+	return indices.isComplete() && is_extension_supported;
 }
 // Vulkan: キューファミリの検索(graphic, present)
 // MEMO: キューファミリ (GPUに仕事を依頼するコマンド群)
@@ -221,10 +223,6 @@ void TriangleApplication::CreateLogicalDevice()
 	
 	std::vector<VkDeviceQueueCreateInfo> queue_create_multi_info = {};
 	std::set<uint32_t> unique_queue_families = { indices.graphics_family.value(), indices.present_family.value() };
-
-	/*
-
-	*/
 	
 	// キューの優先度を設定 (0.0-1.0)
 	float queue_priority = 1.0f;
@@ -265,6 +263,30 @@ void TriangleApplication::CreateLogicalDevice()
 	// NOTE: 単一のキューなので, 0を指定.
 	vkGetDeviceQueue(m_logical_device, indices.graphics_family.value(), 0, &m_graphics_queue);
 	vkGetDeviceQueue(m_logical_device, indices.present_family.value(), 0, &m_present_queue);
+}
+// Vulkan: スワップチェーンの設定
+// NOTE: 未確認の拡張機能を取り除く.
+bool TriangleApplication::CheckDeviceExtensionSupport(const VkPhysicalDevice& device)
+{
+	uint32_t extension_count;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+
+	std::vector<VkExtensionProperties> available_extensions(extension_count);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, available_extensions.data());
+
+	std::set<std::string> required_extensions(m_device_extensions.begin(), m_device_extensions.end());
+	for (const auto& extension : available_extensions)
+	{
+#ifdef DISPLAY_VULKAN_EXTENSION
+		std::cout << extension.extensionName << " " << extension.specVersion << std::endl;
+#endif
+		required_extensions.erase(extension.extensionName);
+	}
+#ifdef DISPLAY_VULKAN_EXTENSION
+	std::cout << std::endl;
+#endif
+
+	return required_extensions.empty();
 }
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
