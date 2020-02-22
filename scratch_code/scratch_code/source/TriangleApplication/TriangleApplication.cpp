@@ -246,9 +246,12 @@ void TriangleApplication::CreateLogicalDevice()
 	create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_multi_info.size());
 	create_info.pQueueCreateInfos = queue_create_multi_info.data();
 	create_info.pEnabledFeatures = &device_features;
+
+	// デバイス拡張機能設定
+	create_info.enabledExtensionCount = static_cast<uint32_t>(m_device_extensions.size());
+	create_info.ppEnabledExtensionNames = m_device_extensions.data();
+
 	// NOTE: enabledLayerCountとppEnableLayerNamesは必要ないが, 互換性を保つため設定する.
-	// NOTE: 現時点では, デバイス拡張機能の設定はしない.
-	create_info.enabledExtensionCount = 0;
 	if (m_enable_validation_layer)
 	{
 		create_info.enabledLayerCount = static_cast<uint32_t>(m_validation_layer.size());
@@ -287,6 +290,32 @@ bool TriangleApplication::CheckDeviceExtensionSupport(const VkPhysicalDevice& de
 #endif
 
 	return required_extensions.empty();
+}
+// Vulkan: サーフェス設定
+SwapChainSupportDetails TriangleApplication::QuerySwapChainSupport(const VkPhysicalDevice& device)
+{
+	// サポートクエリ
+	SwapChainSupportDetails details;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.m_capabillites);
+
+	// surfaceクエリ
+	uint32_t format_count;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &format_count, nullptr);
+	if (format_count != 0)
+	{
+		details.m_formats.resize(format_count);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &format_count, details.m_formats.data());
+	}
+	// presentクエリ
+	uint32_t present_mode_count;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &present_mode_count, nullptr);
+	if (present_mode_count != 0)
+	{
+		details.m_present_modes.resize(present_mode_count);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &present_mode_count, details.m_present_modes.data());
+	}
+
+	return details;
 }
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)

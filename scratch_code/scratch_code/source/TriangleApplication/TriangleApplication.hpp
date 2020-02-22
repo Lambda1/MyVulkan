@@ -15,6 +15,7 @@
 #include <stdexcept>
 
 #include "../QueueFamilies/QueueFamilies.hpp"
+#include "../SwapChainSupportDetails/SwapChainSupportDetails.hpp"
 #include "../VulkanCallBacks/VulkanDebugCallBack_ValidationLayer.hpp"
 
 // 拡張機能情報の表示
@@ -87,6 +88,7 @@ private:
 	void CreateLogicalDevice();
 	// スワップチェーン設定
 	bool CheckDeviceExtensionSupport(const VkPhysicalDevice &device);
+	SwapChainSupportDetails QuerySwapChainSupport(const VkPhysicalDevice &device);
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);

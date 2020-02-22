@@ -25,6 +25,9 @@
     <Filter Include="ヘッダー ファイル\QueueFamilies">
       <UniqueIdentifier>{e646b8a9-f056-478c-a1da-cb686120a818}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\SwapChainSupportDetails">
+      <UniqueIdentifier>{b60df429-4654-4687-b199-f1288cf114ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">
@@ -43,6 +46,9 @@
     </ClInclude>
     <ClInclude Include="source\QueueFamilies\QueueFamilies.hpp">
       <Filter>ヘッダー ファイル\QueueFamilies</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SwapChainSupportDetails\SwapChainSupportDetails.hpp">
+      <Filter>ヘッダー ファイル\SwapChainSupportDetails</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
