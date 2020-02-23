@@ -351,3 +351,6 @@ MigrationBackup/
 
 # Vim
 .swp
+
+# GLSL
+.spv
