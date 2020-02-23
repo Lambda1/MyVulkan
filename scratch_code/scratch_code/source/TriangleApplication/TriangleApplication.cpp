@@ -169,8 +169,18 @@ void TriangleApplication::PickUpPhysicalDevice()
 bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 {
 	QueueFamilyIndices indices = FindQueueFamilies(device);
-
+	
+	// 拡張機能の確認
 	bool is_extension_supported = CheckDeviceExtensionSupport(device);
+
+	// SwapChainサポートの確認
+	// NOTE: 拡張機能確認後にクエリの発行
+	bool swap_chain_adequate = false;
+	if (is_extension_supported)
+	{
+		SwapChainSupportDetails swap_chain_support = QuerySwapChainSupport(device);
+		swap_chain_adequate = !swap_chain_support.m_formats.empty() && !swap_chain_support.m_present_modes.empty();
+	}
 
 	// DEBUG用print
 #if DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL
@@ -184,7 +194,7 @@ bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 	CheckPhysicalDeviceInfo(device_properties, device_features);
 #endif
 
-	return indices.isComplete() && is_extension_supported;
+	return indices.isComplete() && is_extension_supported && swap_chain_adequate;
 }
 // Vulkan: キューファミリの検索(graphic, present)
 // MEMO: キューファミリ (GPUに仕事を依頼するコマンド群)
