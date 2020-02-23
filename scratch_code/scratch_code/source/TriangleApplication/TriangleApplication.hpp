@@ -62,6 +62,9 @@ private:
 	VkQueue m_present_queue;  // ©“®‰ğ•ú‘ÎÛ
 	// Vulkan: SwapChain
 	VkSwapchainKHR m_swap_chain;
+	std::vector<VkImage> m_swap_chain_image;
+	VkFormat m_swap_chain_image_format;
+	VkExtent2D m_swap_chain_extent;
 private:
 	// Vulkan‰Šú‰»
 	void InitVulkan();

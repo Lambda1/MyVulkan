@@ -336,6 +336,14 @@ void TriangleApplication::CreateSwapChain()
 
 	// SwapChain生成
 	if (vkCreateSwapchainKHR(m_logical_device, &create_info, nullptr, &m_swap_chain) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE SWAP CHAIN."); }
+
+	// Image数の取得
+	vkGetSwapchainImagesKHR(m_logical_device, m_swap_chain, &image_count, nullptr);
+	m_swap_chain_image.resize(image_count);
+	vkGetSwapchainImagesKHR(m_logical_device, m_swap_chain, &image_count, m_swap_chain_image.data());
+	
+	m_swap_chain_image_format = surface_format.format;
+	m_swap_chain_extent = extent;
 }
 // Vulkan: スワップチェーンの設定
 // NOTE: 拡張機能にスワップチェーンがあるか走査.
@@ -502,7 +510,7 @@ TriangleApplication::TriangleApplication() :
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
-	m_swap_chain()
+	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent()
 {
 
 }
@@ -514,7 +522,7 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
-	m_swap_chain()
+	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent()
 {
 
 }
