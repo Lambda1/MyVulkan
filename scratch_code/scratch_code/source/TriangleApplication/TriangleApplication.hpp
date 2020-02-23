@@ -65,6 +65,8 @@ private:
 	std::vector<VkImage> m_swap_chain_image;
 	VkFormat m_swap_chain_image_format;
 	VkExtent2D m_swap_chain_extent;
+	// Vulkan: ImageView
+	std::vector<VkImageView> m_swap_chain_image_views;
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -100,6 +102,9 @@ private:
 	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats);
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &available_present_modes);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	// ImageView設定
+	void CreateImageViews();
+
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);

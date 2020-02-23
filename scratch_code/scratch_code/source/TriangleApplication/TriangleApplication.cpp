@@ -17,6 +17,8 @@ void TriangleApplication::InitVulkan()
 	CreateLogicalDevice();
 	// スワップチェーン生成
 	CreateSwapChain();
+	// イメージビュー生成
+	CreateImageViews();
 }
 
 // メインループ
@@ -34,6 +36,8 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// イメージビュー破棄
+	for (auto image_view : m_swap_chain_image_views) { vkDestroyImageView(m_logical_device, image_view, nullptr); }
 	// スワップチェーン破棄
 	vkDestroySwapchainKHR(m_logical_device, m_swap_chain, nullptr);
 	// 論理デバイス破棄
@@ -432,6 +436,33 @@ VkExtent2D TriangleApplication::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR&
 
 	return actualExtent;
 }
+// Vulkan: ImageViewsの生成
+void TriangleApplication::CreateImageViews()
+{
+	m_swap_chain_image_views.resize(m_swap_chain_image.size());
+	for (size_t i = 0; i < m_swap_chain_image_views.size(); ++i)
+	{
+		VkImageViewCreateInfo create_info = {};
+		create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		create_info.image = m_swap_chain_image[i];
+		create_info.format = m_swap_chain_image_format;
+		create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+		create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+		create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		create_info.subresourceRange.baseMipLevel = 0;
+		create_info.subresourceRange.levelCount = 1;
+		create_info.subresourceRange.baseArrayLayer = 0;
+		create_info.subresourceRange.layerCount = 1;
+
+		if (vkCreateImageView(m_logical_device, &create_info, nullptr, &m_swap_chain_image_views[i]) != VK_SUCCESS) { throw std::runtime_error("FAILD TO CREATE IMAGE VIEWS."); }
+	}
+}
+
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
 {
