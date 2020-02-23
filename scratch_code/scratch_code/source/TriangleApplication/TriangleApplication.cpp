@@ -19,6 +19,9 @@ void TriangleApplication::InitVulkan()
 	CreateSwapChain();
 	// イメージビュー生成
 	CreateImageViews();
+
+	// Graphics Pipelineの組み立て
+	CreateGraphicsPipeline();
 }
 
 // メインループ
@@ -461,6 +464,12 @@ void TriangleApplication::CreateImageViews()
 
 		if (vkCreateImageView(m_logical_device, &create_info, nullptr, &m_swap_chain_image_views[i]) != VK_SUCCESS) { throw std::runtime_error("FAILD TO CREATE IMAGE VIEWS."); }
 	}
+}
+
+// Vulkan: Graphics Pipeline
+void TriangleApplication::CreateGraphicsPipeline()
+{
+
 }
 
 // Vulkan: 拡張機能のチェック

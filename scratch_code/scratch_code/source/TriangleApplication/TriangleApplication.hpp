@@ -104,6 +104,9 @@ private:
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	// ImageView設定
 	void CreateImageViews();
+	
+	// GraphichsPipline
+	void CreateGraphicsPipeline();
 
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
