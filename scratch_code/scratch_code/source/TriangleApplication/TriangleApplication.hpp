@@ -12,7 +12,9 @@
 #include <set>
 #include <string>
 #include <iostream>
+#include <algorithm>
 #include <stdexcept>
+#include <cstdint>
 
 #include "../QueueFamilies/QueueFamilies.hpp"
 #include "../SwapChainSupportDetails/SwapChainSupportDetails.hpp"
@@ -32,7 +34,7 @@ class TriangleApplication
 private:
 	// ウィンドウ関係
 	GLFWwindow* m_window;
-	const int m_window_width, m_window_height;
+	const uint32_t m_window_width, m_window_height;
 	const std::string m_window_name;	
 
 	// Vulkan: const
@@ -58,6 +60,8 @@ private:
 	// Vulkan: Queue
 	VkQueue m_graphics_queue; // 論理デバイスと共に解放(自動解放)
 	VkQueue m_present_queue;  // 自動解放対象
+	// Vulkan: SwapChain
+	VkSwapchainKHR m_swap_chain;
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -87,10 +91,12 @@ private:
 	// 論理デバイス設定
 	void CreateLogicalDevice();
 	// スワップチェーン設定
+	void CreateSwapChain();
 	bool CheckDeviceExtensionSupport(const VkPhysicalDevice &device);
 	SwapChainSupportDetails QuerySwapChainSupport(const VkPhysicalDevice &device);
 	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats);
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &available_present_modes);
+	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);

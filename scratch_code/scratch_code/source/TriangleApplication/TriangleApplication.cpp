@@ -13,6 +13,10 @@ void TriangleApplication::InitVulkan()
 	CreateSurface();
 	// 物理デバイスの設定
 	PickUpPhysicalDevice();
+	// 論理デバイス生成
+	CreateLogicalDevice();
+	// スワップチェーン生成
+	CreateSwapChain();
 }
 
 // メインループ
@@ -30,13 +34,16 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// スワップチェーン破棄
+	vkDestroySwapchainKHR(m_logical_device, m_swap_chain, nullptr);
+	// 論理デバイス破棄
+	vkDestroyDevice(m_logical_device, nullptr);
 	// デバッグメッセンジャ破棄
 	if (m_enable_validation_layer) { Destroy_Debug_Utils_Messenger_EXT(m_vk_instance, m_debug_messanger, nullptr); }
-	// ウィンドウサーフェスの破棄
+	// ウィンドウサーフェス破棄
 	vkDestroySurfaceKHR(m_vk_instance, m_surface, nullptr);
 	// インスタンス破棄
 	vkDestroyInstance(m_vk_instance, nullptr);
-	vkDestroyDevice(m_logical_device, nullptr);
 
 	/* --GLFW3の終了処理--*/
 	glfwDestroyWindow(m_window);
@@ -277,6 +284,59 @@ void TriangleApplication::CreateLogicalDevice()
 	vkGetDeviceQueue(m_logical_device, indices.graphics_family.value(), 0, &m_graphics_queue);
 	vkGetDeviceQueue(m_logical_device, indices.present_family.value(), 0, &m_present_queue);
 }
+// Vulkan: スワップチェーン生成
+void TriangleApplication::CreateSwapChain()
+{
+	SwapChainSupportDetails swap_chain_support = QuerySwapChainSupport(m_physical_device);
+
+	VkSurfaceFormatKHR surface_format = ChooseSwapSurfaceFormat(swap_chain_support.m_formats);
+	VkPresentModeKHR present_mode = ChooseSwapPresentMode(swap_chain_support.m_present_modes);
+	VkExtent2D extent = ChooseSwapExtent(swap_chain_support.m_capabillites);
+
+	// swap chainのイメージ数設定
+	// NOTE: +1することで, 余裕を持たせる(但し, 最大値を超えないようにする).
+	uint32_t image_count = swap_chain_support.m_capabillites.minImageCount + 1;
+	// NOTE: 0は最大値が無いことを示す.
+	if (swap_chain_support.m_capabillites.maxImageCount > 0 && image_count > swap_chain_support.m_capabillites.maxImageCount) { image_count = swap_chain_support.m_capabillites.maxImageCount; }
+
+	// swap chainオブジェクトの作成
+	VkSwapchainCreateInfoKHR create_info = {};
+	create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	create_info.surface = m_surface;
+	create_info.minImageCount = image_count;
+	create_info.imageFormat = surface_format.format;
+	create_info.imageExtent = extent;
+	// NOTE: stereoscopic以外は, 常に「1」
+	create_info.imageArrayLayers = 1;
+	create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+	// キューファミリ設定
+	// NOTE: グラフィックファミリがプレゼントファミリと異なる時に必要.
+	QueueFamilyIndices indices = FindQueueFamilies(m_physical_device);
+	uint32_t queue_family_indices[] = { indices.graphics_family.value(), indices.present_family.value() };
+	if (indices.graphics_family != indices.present_family)
+	{
+		create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		create_info.queueFamilyIndexCount = 2;
+		create_info.pQueueFamilyIndices = queue_family_indices;
+	}
+	else
+	{
+		create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		create_info.queueFamilyIndexCount = 0;     // optional
+		create_info.pQueueFamilyIndices = nullptr; // optional
+	}
+
+	create_info.preTransform = swap_chain_support.m_capabillites.currentTransform;
+	create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	create_info.presentMode = present_mode;
+	// クリッピング
+	create_info.clipped = VK_TRUE;
+	create_info.oldSwapchain = VK_NULL_HANDLE;
+
+	// SwapChain生成
+	if (vkCreateSwapchainKHR(m_logical_device, &create_info, nullptr, &m_swap_chain) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE SWAP CHAIN."); }
+}
 // Vulkan: スワップチェーンの設定
 // NOTE: 拡張機能にスワップチェーンがあるか走査.
 // NOTE: 取り除くことでチェックしている.
@@ -351,6 +411,18 @@ VkPresentModeKHR TriangleApplication::ChooseSwapPresentMode(const std::vector<Vk
 	// 垂直同期モード (?)
 	// NOTE: サポートされていることが保証されている.
 	return VK_PRESENT_MODE_FIFO_KHR;
+}
+// Vulkan: 解像度の選択
+VkExtent2D TriangleApplication::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+	if (capabilities.currentExtent.width != UINT32_MAX) { return capabilities.currentExtent; }
+	
+	// width, heightを許容範囲に収める.
+	VkExtent2D actualExtent = {m_window_width, m_window_height};
+	actualExtent.width  = std::max(capabilities.minImageExtent.width,  std::min(capabilities.maxImageExtent.width, actualExtent.width));
+	actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+	return actualExtent;
 }
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
@@ -429,7 +501,8 @@ TriangleApplication::TriangleApplication() :
 	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(),
-	m_graphics_queue(), m_present_queue()
+	m_graphics_queue(), m_present_queue(),
+	m_swap_chain()
 {
 
 }
@@ -440,7 +513,8 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(),
-	m_graphics_queue(), m_present_queue()
+	m_graphics_queue(), m_present_queue(),
+	m_swap_chain()
 {
 
 }
