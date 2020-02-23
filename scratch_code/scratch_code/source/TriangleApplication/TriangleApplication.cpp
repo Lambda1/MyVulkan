@@ -470,7 +470,7 @@ void TriangleApplication::CreateImageViews()
 void TriangleApplication::CreateGraphicsPipeline()
 {
 	auto vert_shader_code = ReadFile(VERT_PATH);
-	auto vert_shader_code = ReadFile(FRAG_PATH);
+	auto frag_shader_code = ReadFile(FRAG_PATH);
 }
 
 // Vulkan: 拡張機能のチェック
