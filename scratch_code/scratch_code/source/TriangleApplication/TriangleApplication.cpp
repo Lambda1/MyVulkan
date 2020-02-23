@@ -278,7 +278,8 @@ void TriangleApplication::CreateLogicalDevice()
 	vkGetDeviceQueue(m_logical_device, indices.present_family.value(), 0, &m_present_queue);
 }
 // Vulkan: スワップチェーンの設定
-// NOTE: 未確認の拡張機能を取り除く.
+// NOTE: 拡張機能にスワップチェーンがあるか走査.
+// NOTE: 取り除くことでチェックしている.
 bool TriangleApplication::CheckDeviceExtensionSupport(const VkPhysicalDevice& device)
 {
 	uint32_t extension_count;
@@ -326,6 +327,30 @@ SwapChainSupportDetails TriangleApplication::QuerySwapChainSupport(const VkPhysi
 	}
 
 	return details;
+}
+// Vulkan: 色空間の選択
+VkSurfaceFormatKHR TriangleApplication::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)
+{
+	// 色空間チェック
+	for (const auto& available_format : available_formats)
+	{
+		// 32bitSRGB空間を使用する.
+		if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) { return available_format; }
+	}
+	// SRGB空間がサポートされていない場合は, 先頭の色空間を使用.
+	return available_formats[0];
+}
+// Vulkan: 描画モードの選択
+VkPresentModeKHR TriangleApplication::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& available_present_modes)
+{
+	// トリプルバッファリングが利用可能なら選択.
+	for (const auto& available_present_mode : available_present_modes)
+	{
+		if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR) { return available_present_mode; }
+	}
+	// 垂直同期モード (?)
+	// NOTE: サポートされていることが保証されている.
+	return VK_PRESENT_MODE_FIFO_KHR;
 }
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)

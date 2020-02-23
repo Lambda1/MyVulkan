@@ -16,8 +16,7 @@ struct SwapChainSupportDetails
 	std::vector<VkPresentModeKHR> m_present_modes;
 
 	SwapChainSupportDetails():
-	m_capabillites()
-	{}
+	m_capabillites() {}
 };
 
 #endif

@@ -89,6 +89,8 @@ private:
 	// スワップチェーン設定
 	bool CheckDeviceExtensionSupport(const VkPhysicalDevice &device);
 	SwapChainSupportDetails QuerySwapChainSupport(const VkPhysicalDevice &device);
+	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &available_formats);
+	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &available_present_modes);
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
 	void CheckExtension(const std::vector<const char*> &glfw_extensions);
