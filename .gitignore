@@ -350,7 +350,7 @@ MigrationBackup/
 .ionide/
 
 # Vim
-.swp
+*.swp
 
 # GLSL
-.spv
+*.spv
