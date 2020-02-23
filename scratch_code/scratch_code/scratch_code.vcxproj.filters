@@ -28,6 +28,9 @@
     <Filter Include="ヘッダー ファイル\SwapChainSupportDetails">
       <UniqueIdentifier>{b60df429-4654-4687-b199-f1288cf114ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Loader">
+      <UniqueIdentifier>{e5d2d3bb-41f7-48d2-a62e-2ba3d78dea5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">
@@ -49,6 +52,9 @@
     </ClInclude>
     <ClInclude Include="source\SwapChainSupportDetails\SwapChainSupportDetails.hpp">
       <Filter>ヘッダー ファイル\SwapChainSupportDetails</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FileReader\FileReader.hpp">
+      <Filter>ヘッダー ファイル\Loader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

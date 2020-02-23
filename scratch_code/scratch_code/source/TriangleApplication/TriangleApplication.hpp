@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <cstdint>
 
+#include "../FileReader/FileReader.hpp"
 #include "../QueueFamilies/QueueFamilies.hpp"
 #include "../SwapChainSupportDetails/SwapChainSupportDetails.hpp"
 #include "../VulkanCallBacks/VulkanDebugCallBack_ValidationLayer.hpp"
@@ -26,6 +27,11 @@
 #define DISPLAY_VULKAN_VALIDATION_LAYER_DETAIL true
 // 物理デバイス情報の表示
 #define DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL true
+
+// shaderパス
+// NOTE: とりあえずハードコーディング
+#define VERT_PATH "../../scratch_code/shader/vert.spv"
+#define FRAG_PATH "../../scratch_code/shader/frag.spv"
 
 #define NDEBUG
 
