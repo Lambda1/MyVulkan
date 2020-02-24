@@ -9,8 +9,19 @@ void TriangleApplication::InitVulkan()
 	CreateInstance();
 	// デバッグメッセンジャの設定
 	SetupDebugMessanger();
+	// ウィンドウサーフェス生成
+	CreateSurface();
 	// 物理デバイスの設定
 	PickUpPhysicalDevice();
+	// 論理デバイス生成
+	CreateLogicalDevice();
+	// スワップチェーン生成
+	CreateSwapChain();
+	// イメージビュー生成
+	CreateImageViews();
+
+	// Graphics Pipelineの組み立て
+	CreateGraphicsPipeline();
 }
 
 // メインループ
@@ -28,11 +39,18 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// イメージビュー破棄
+	for (auto image_view : m_swap_chain_image_views) { vkDestroyImageView(m_logical_device, image_view, nullptr); }
+	// スワップチェーン破棄
+	vkDestroySwapchainKHR(m_logical_device, m_swap_chain, nullptr);
+	// 論理デバイス破棄
+	vkDestroyDevice(m_logical_device, nullptr);
 	// デバッグメッセンジャ破棄
 	if (m_enable_validation_layer) { Destroy_Debug_Utils_Messenger_EXT(m_vk_instance, m_debug_messanger, nullptr); }
+	// ウィンドウサーフェス破棄
+	vkDestroySurfaceKHR(m_vk_instance, m_surface, nullptr);
 	// インスタンス破棄
 	vkDestroyInstance(m_vk_instance, nullptr);
-	vkDestroyDevice(m_logical_device, nullptr);
 
 	/* --GLFW3の終了処理--*/
 	glfwDestroyWindow(m_window);
@@ -128,6 +146,11 @@ void TriangleApplication::SetupDebugMessanger()
 	// コールバックの設定
 	if (Create_Debug_Utils_Messenger_EXT(m_vk_instance, &create_info, nullptr, &m_debug_messanger) != VK_SUCCESS) { throw std::runtime_error("FAILED TO SET UP DEBUG MESSANGER."); }
 }
+// Vulkan: ウィンドウサーフェスの生成
+void TriangleApplication::CreateSurface()
+{
+	if (glfwCreateWindowSurface(m_vk_instance, m_window, nullptr, &m_surface) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE WINDOW SURFACE."); }
+}
 // Vulkan: 標準デバッグメッセンジャーの設定
 void TriangleApplication::DefaultDebugSetting(VkDebugUtilsMessengerCreateInfoEXT& create_info)
 {
@@ -160,6 +183,18 @@ void TriangleApplication::PickUpPhysicalDevice()
 bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 {
 	QueueFamilyIndices indices = FindQueueFamilies(device);
+	
+	// 拡張機能の確認
+	bool is_extension_supported = CheckDeviceExtensionSupport(device);
+
+	// SwapChainサポートの確認
+	// NOTE: 拡張機能確認後にクエリの発行
+	bool swap_chain_adequate = false;
+	if (is_extension_supported)
+	{
+		SwapChainSupportDetails swap_chain_support = QuerySwapChainSupport(device);
+		swap_chain_adequate = !swap_chain_support.m_formats.empty() && !swap_chain_support.m_present_modes.empty();
+	}
 
 	// DEBUG用print
 #if DISPLAY_VULKAN_PHYSICAL_DEVICE_DETAIL
@@ -173,9 +208,9 @@ bool TriangleApplication::isDeviceSuitable(const VkPhysicalDevice &device)
 	CheckPhysicalDeviceInfo(device_properties, device_features);
 #endif
 
-	return indices.isComplete();
+	return indices.isComplete() && is_extension_supported && swap_chain_adequate;
 }
-// Vulkan: グラフィックコマンドをサポートするキューファミリの検索
+// Vulkan: キューファミリの検索(graphic, present)
 // MEMO: キューファミリ (GPUに仕事を依頼するコマンド群)
 QueueFamilyIndices TriangleApplication::FindQueueFamilies(const VkPhysicalDevice &device)
 {
@@ -192,6 +227,12 @@ QueueFamilyIndices TriangleApplication::FindQueueFamilies(const VkPhysicalDevice
 	{
 		// キュー番号を登録
 		if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) { indices.graphics_family = idx; }
+
+		VkBool32 present_support = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, idx, m_surface, &present_support);
+		// presentチェック
+		if (present_support) { indices.present_family = idx; }
+
 		// 既に値を保持している場合は, 探索終了
 		if (indices.isComplete()) { break; }
 		++idx;
@@ -203,13 +244,21 @@ void TriangleApplication::CreateLogicalDevice()
 {
 	// グラフィックカードのキューファミリを設定
 	QueueFamilyIndices indices = FindQueueFamilies(m_physical_device);
-	VkDeviceQueueCreateInfo queue_create_info = {};
-	queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queue_create_info.queueFamilyIndex = indices.graphics_family.value();
-	queue_create_info.queueCount = 1;
+	
+	std::vector<VkDeviceQueueCreateInfo> queue_create_multi_info = {};
+	std::set<uint32_t> unique_queue_families = { indices.graphics_family.value(), indices.present_family.value() };
+	
 	// キューの優先度を設定 (0.0-1.0)
 	float queue_priority = 1.0f;
-	queue_create_info.pQueuePriorities = &queue_priority;
+	for (uint32_t queue_family : unique_queue_families)
+	{
+		VkDeviceQueueCreateInfo queue_create_info = {};
+		queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queue_create_info.queueFamilyIndex = indices.graphics_family.value();
+		queue_create_info.queueCount = 1;
+		queue_create_info.pQueuePriorities = &queue_priority;
+		queue_create_multi_info.push_back(queue_create_info);
+	}
 
 	// デバイス機能の設定
 	// NOTE: ジオメトリシェーダ機能の設定などに使用(現時点では, 特に設定はしない).
@@ -218,12 +267,15 @@ void TriangleApplication::CreateLogicalDevice()
 	// 論理デバイスの作成
 	VkDeviceCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	create_info.pQueueCreateInfos = &queue_create_info;
-	create_info.queueCreateInfoCount = 1;
+	create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_multi_info.size());
+	create_info.pQueueCreateInfos = queue_create_multi_info.data();
 	create_info.pEnabledFeatures = &device_features;
+
+	// デバイス拡張機能設定
+	create_info.enabledExtensionCount = static_cast<uint32_t>(m_device_extensions.size());
+	create_info.ppEnabledExtensionNames = m_device_extensions.data();
+
 	// NOTE: enabledLayerCountとppEnableLayerNamesは必要ないが, 互換性を保つため設定する.
-	// NOTE: 現時点では, デバイス拡張機能の設定はしない.
-	create_info.enabledExtensionCount = 0;
 	if (m_enable_validation_layer)
 	{
 		create_info.enabledLayerCount = static_cast<uint32_t>(m_validation_layer.size());
@@ -234,10 +286,234 @@ void TriangleApplication::CreateLogicalDevice()
 	// 論理デバイスのインスタンス化
 	if (vkCreateDevice(m_physical_device, &create_info, nullptr, &m_logical_device) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE LOGICAL DEVICE."); }
 
-	// 論理デバイスとキューを紐づける(キューハンドル).
+	// キューハンドル取得
 	// NOTE: 単一のキューなので, 0を指定.
 	vkGetDeviceQueue(m_logical_device, indices.graphics_family.value(), 0, &m_graphics_queue);
+	vkGetDeviceQueue(m_logical_device, indices.present_family.value(), 0, &m_present_queue);
 }
+// Vulkan: スワップチェーン生成
+void TriangleApplication::CreateSwapChain()
+{
+	SwapChainSupportDetails swap_chain_support = QuerySwapChainSupport(m_physical_device);
+
+	VkSurfaceFormatKHR surface_format = ChooseSwapSurfaceFormat(swap_chain_support.m_formats);
+	VkPresentModeKHR present_mode = ChooseSwapPresentMode(swap_chain_support.m_present_modes);
+	VkExtent2D extent = ChooseSwapExtent(swap_chain_support.m_capabillites);
+
+	// swap chainのイメージ数設定
+	// NOTE: +1することで, 余裕を持たせる(但し, 最大値を超えないようにする).
+	uint32_t image_count = swap_chain_support.m_capabillites.minImageCount + 1;
+	// NOTE: 0は最大値が無いことを示す.
+	if (swap_chain_support.m_capabillites.maxImageCount > 0 && image_count > swap_chain_support.m_capabillites.maxImageCount) { image_count = swap_chain_support.m_capabillites.maxImageCount; }
+
+	// swap chainオブジェクトの作成
+	VkSwapchainCreateInfoKHR create_info = {};
+	create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	create_info.surface = m_surface;
+	create_info.minImageCount = image_count;
+	create_info.imageFormat = surface_format.format;
+	create_info.imageExtent = extent;
+	// NOTE: stereoscopic以外は, 常に「1」
+	create_info.imageArrayLayers = 1;
+	create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+	// キューファミリ設定
+	// NOTE: グラフィックファミリがプレゼントファミリと異なる時に必要.
+	QueueFamilyIndices indices = FindQueueFamilies(m_physical_device);
+	uint32_t queue_family_indices[] = { indices.graphics_family.value(), indices.present_family.value() };
+	if (indices.graphics_family != indices.present_family)
+	{
+		create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		create_info.queueFamilyIndexCount = 2;
+		create_info.pQueueFamilyIndices = queue_family_indices;
+	}
+	else
+	{
+		create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		create_info.queueFamilyIndexCount = 0;     // optional
+		create_info.pQueueFamilyIndices = nullptr; // optional
+	}
+
+	create_info.preTransform = swap_chain_support.m_capabillites.currentTransform;
+	create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	create_info.presentMode = present_mode;
+	// クリッピング
+	create_info.clipped = VK_TRUE;
+	create_info.oldSwapchain = VK_NULL_HANDLE;
+
+	// SwapChain生成
+	if (vkCreateSwapchainKHR(m_logical_device, &create_info, nullptr, &m_swap_chain) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE SWAP CHAIN."); }
+
+	// Image数の取得
+	vkGetSwapchainImagesKHR(m_logical_device, m_swap_chain, &image_count, nullptr);
+	m_swap_chain_image.resize(image_count);
+	vkGetSwapchainImagesKHR(m_logical_device, m_swap_chain, &image_count, m_swap_chain_image.data());
+	
+	m_swap_chain_image_format = surface_format.format;
+	m_swap_chain_extent = extent;
+}
+// Vulkan: スワップチェーンの設定
+// NOTE: 拡張機能にスワップチェーンがあるか走査.
+// NOTE: 取り除くことでチェックしている.
+bool TriangleApplication::CheckDeviceExtensionSupport(const VkPhysicalDevice& device)
+{
+	uint32_t extension_count;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+
+	std::vector<VkExtensionProperties> available_extensions(extension_count);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, available_extensions.data());
+
+	std::set<std::string> required_extensions(m_device_extensions.begin(), m_device_extensions.end());
+	for (const auto& extension : available_extensions)
+	{
+#ifdef DISPLAY_VULKAN_EXTENSION
+		std::cout << extension.extensionName << " " << extension.specVersion << std::endl;
+#endif
+		required_extensions.erase(extension.extensionName);
+	}
+#ifdef DISPLAY_VULKAN_EXTENSION
+	std::cout << std::endl;
+#endif
+
+	return required_extensions.empty();
+}
+// Vulkan: サーフェス設定
+SwapChainSupportDetails TriangleApplication::QuerySwapChainSupport(const VkPhysicalDevice& device)
+{
+	// サポートクエリ
+	SwapChainSupportDetails details;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.m_capabillites);
+
+	// surfaceクエリ
+	uint32_t format_count;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &format_count, nullptr);
+	if (format_count != 0)
+	{
+		details.m_formats.resize(format_count);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &format_count, details.m_formats.data());
+	}
+	// presentクエリ
+	uint32_t present_mode_count;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &present_mode_count, nullptr);
+	if (present_mode_count != 0)
+	{
+		details.m_present_modes.resize(present_mode_count);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &present_mode_count, details.m_present_modes.data());
+	}
+
+	return details;
+}
+// Vulkan: 色空間の選択
+VkSurfaceFormatKHR TriangleApplication::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats)
+{
+	// 色空間チェック
+	for (const auto& available_format : available_formats)
+	{
+		// 32bitSRGB空間を使用する.
+		if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) { return available_format; }
+	}
+	// SRGB空間がサポートされていない場合は, 先頭の色空間を使用.
+	return available_formats[0];
+}
+// Vulkan: 描画モードの選択
+VkPresentModeKHR TriangleApplication::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& available_present_modes)
+{
+	// トリプルバッファリングが利用可能なら選択.
+	for (const auto& available_present_mode : available_present_modes)
+	{
+		if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR) { return available_present_mode; }
+	}
+	// 垂直同期モード (?)
+	// NOTE: サポートされていることが保証されている.
+	return VK_PRESENT_MODE_FIFO_KHR;
+}
+// Vulkan: 解像度の選択
+VkExtent2D TriangleApplication::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+	if (capabilities.currentExtent.width != UINT32_MAX) { return capabilities.currentExtent; }
+	
+	// width, heightを許容範囲に収める.
+	VkExtent2D actualExtent = {m_window_width, m_window_height};
+	actualExtent.width  = std::max(capabilities.minImageExtent.width,  std::min(capabilities.maxImageExtent.width, actualExtent.width));
+	actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+	return actualExtent;
+}
+// Vulkan: ImageViewsの生成
+void TriangleApplication::CreateImageViews()
+{
+	m_swap_chain_image_views.resize(m_swap_chain_image.size());
+	for (size_t i = 0; i < m_swap_chain_image_views.size(); ++i)
+	{
+		VkImageViewCreateInfo create_info = {};
+		create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		create_info.image = m_swap_chain_image[i];
+		create_info.format = m_swap_chain_image_format;
+		create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+		create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+		create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		create_info.subresourceRange.baseMipLevel = 0;
+		create_info.subresourceRange.levelCount = 1;
+		create_info.subresourceRange.baseArrayLayer = 0;
+		create_info.subresourceRange.layerCount = 1;
+
+		if (vkCreateImageView(m_logical_device, &create_info, nullptr, &m_swap_chain_image_views[i]) != VK_SUCCESS) { throw std::runtime_error("FAILD TO CREATE IMAGE VIEWS."); }
+	}
+}
+
+// Vulkan: Graphics Pipeline
+void TriangleApplication::CreateGraphicsPipeline()
+{
+	// SPIR-V読み取り
+	auto vert_shader_code = ReadFile(VERT_PATH);
+	auto frag_shader_code = ReadFile(FRAG_PATH);
+
+	// シェーダモジュール生成
+	VkShaderModule vert_shader_module = CreateShaderModule(vert_shader_code);
+	VkShaderModule frag_shader_module = CreateShaderModule(frag_shader_code);
+
+	// パイプラインステージに割り当て
+	// VERT
+	VkPipelineShaderStageCreateInfo vert_shader_stage_info = {};
+	vert_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vert_shader_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vert_shader_stage_info.module = vert_shader_module;
+	vert_shader_stage_info.pName = "main";
+	// FRAG
+	VkPipelineShaderStageCreateInfo frag_shader_stage_info = {};
+	frag_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	frag_shader_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	frag_shader_stage_info.module = frag_shader_module;
+	frag_shader_stage_info.pName = "main";
+
+	// struct
+	VkPipelineShaderStageCreateInfo shader_stages[] = { vert_shader_stage_info, frag_shader_stage_info };
+
+	// シェーダモジュール破棄
+	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
+	vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
+}
+// Vulkan: シェーダ
+VkShaderModule TriangleApplication::CreateShaderModule(const std::vector<char>& byte_code)
+{
+	// パラメータ設定
+	VkShaderModuleCreateInfo create_info = {};
+	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	create_info.codeSize = byte_code.size();
+	create_info.pCode = reinterpret_cast<const uint32_t*>(byte_code.data());
+
+	// シェーダモジュール生成
+	VkShaderModule shader_module;
+	if (vkCreateShaderModule(m_logical_device, &create_info, nullptr, &shader_module) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE SHADER MODULE."); }
+
+	return shader_module;
+}
+
 // Vulkan: 拡張機能のチェック
 void TriangleApplication::CheckExtension(const std::vector<const char*>& glfw_extensions)
 {
@@ -312,8 +588,11 @@ void TriangleApplication::CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperti
 TriangleApplication::TriangleApplication() :
 	m_window(nullptr), m_window_width(800), m_window_height(600), m_window_name("Vulkan Apps"),
 	m_vk_instance(), m_debug_messanger(),
+	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
-	m_logical_device(), m_graphics_queue()
+	m_logical_device(),
+	m_graphics_queue(), m_present_queue(),
+	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent()
 {
 
 }
@@ -321,8 +600,11 @@ TriangleApplication::TriangleApplication() :
 TriangleApplication::TriangleApplication(const int& width, const int& height, const std::string& name):
 	m_window(nullptr), m_window_width(width), m_window_height(height), m_window_name(name),
 	m_vk_instance(), m_debug_messanger(),
+	m_surface(),
 	m_physical_device(VK_NULL_HANDLE),
-	m_logical_device(), m_graphics_queue()
+	m_logical_device(),
+	m_graphics_queue(), m_present_queue(),
+	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent()
 {
 
 }
