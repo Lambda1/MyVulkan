@@ -44,6 +44,8 @@ void TriangleApplication::MainLoop()
 		// 描画
 		DrawFrame();
 	}
+	// 論理デバイスの操作を待ってから, 破棄に移行
+	vkDeviceWaitIdle(m_logical_device);
 }
 
 // 終了処理
@@ -673,6 +675,15 @@ void TriangleApplication::CreateRenderPass()
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &color_attachment_ref;
 
+	// dependency
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
 	// Render Pass
 	VkRenderPassCreateInfo render_pass_info = {};
 	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -680,6 +691,8 @@ void TriangleApplication::CreateRenderPass()
 	render_pass_info.pAttachments = &color_attachment;
 	render_pass_info.subpassCount = 1;
 	render_pass_info.pSubpasses = &subpass;
+	render_pass_info.dependencyCount = 1;
+	render_pass_info.pDependencies = &dependency;
 	if (vkCreateRenderPass(m_logical_device, &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE REDER PASS."); }
 }
 // Vulkan: Framebuffer
@@ -878,6 +891,19 @@ void TriangleApplication::DrawFrame()
 	submit_info.pSignalSemaphores = signal_semaphores;
 
 	if (vkQueueSubmit(m_graphics_queue, 1, &submit_info, VK_NULL_HANDLE) != VK_SUCCESS) { throw std::runtime_error("FAILED TO SUBMIT DRAW COMMAND BUFFER."); }
+
+	VkPresentInfoKHR present_info = {};
+	present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	present_info.waitSemaphoreCount = 1;
+	present_info.pWaitSemaphores = signal_semaphores;
+
+	VkSwapchainKHR swap_chains[] = { m_swap_chain };
+	present_info.swapchainCount = 1;
+	present_info.pSwapchains = swap_chains;
+	present_info.pImageIndices = &image_index;
+	present_info.pResults = nullptr; // Optional
+
+	vkQueuePresentKHR(m_present_queue, &present_info);
 }
 // Vulkan: セマフォ生成
 void TriangleApplication::CreateSemaphores()
