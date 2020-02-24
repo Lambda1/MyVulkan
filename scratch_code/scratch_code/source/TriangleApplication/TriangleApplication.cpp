@@ -29,6 +29,8 @@ void TriangleApplication::InitVulkan()
 	CreateCommandPool();
 	// コマンドバッファ生成
 	CreateCommandBuffers();
+	// セマフォ生成
+	CreateSemaphores();
 }
 
 // メインループ
@@ -39,6 +41,8 @@ void TriangleApplication::MainLoop()
 	{
 		// イベントチェック
 		glfwPollEvents();
+		// 描画
+		DrawFrame();
 	}
 }
 
@@ -46,6 +50,8 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// セマフォ破棄
+	vkDestroySemaphore(m_logical_device, m_image_available_semaphore, nullptr);
 	// 描画コマンド破棄
 	vkDestroyCommandPool(m_logical_device, m_command_pool, nullptr);
 	// フレームバッファ破棄
@@ -843,6 +849,22 @@ void TriangleApplication::CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperti
 	std::cout << "\t" << "TESSELLEATION SHADER: " << std::boolalpha << static_cast<bool>(feature.tessellationShader) << std::endl;
 }
 
+// MainLoop
+// Frame描画
+// NOTE: スワップチェーンから取得 -> コマンドバッファ実行 -> スワップチェーンに画像を戻す
+void TriangleApplication::DrawFrame()
+{
+
+}
+// Vulkan: セマフォ生成
+void TriangleApplication::CreateSemaphores()
+{
+	// NOTE: 現段階では, sTypeのみ設定(将来的に増えるかも)
+	VkSemaphoreCreateInfo semaphore_info = {};
+	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	if (vkCreateSemaphore(m_logical_device, &semaphore_info, nullptr, &m_image_available_semaphore) != VK_SUCCESS) { throw std::runtime_error("FAIELD TO CREATE SEMAPHORES."); }
+}
+
 /* --public-- */
 
 // コンストラクタ
@@ -856,7 +878,8 @@ TriangleApplication::TriangleApplication() :
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
 	m_render_pass(), m_pipeline_layout(), m_graphics_pipeline(),
-	m_command_pool()
+	m_command_pool(),
+	m_image_available_semaphore(), m_render_finished_semaphore()
 {
 
 }
@@ -870,7 +893,8 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
 	m_render_pass(), m_pipeline_layout(), m_graphics_pipeline(),
-	m_command_pool()
+	m_command_pool(),
+	m_image_available_semaphore(), m_render_finished_semaphore()
 {
 
 }

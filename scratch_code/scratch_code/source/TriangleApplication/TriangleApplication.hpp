@@ -82,6 +82,9 @@ private:
 	// Vulkan: Command
 	VkCommandPool m_command_pool;
 	std::vector<VkCommandBuffer> m_command_buffers;
+
+	// MainLoop
+	VkSemaphore m_image_available_semaphore, m_render_finished_semaphore;
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -137,6 +140,10 @@ private:
 	bool CheckValidationLayerSupport();
 	// 物理デバイス情報の表示
 	void CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperties &prop, const VkPhysicalDeviceFeatures &feature);
+
+	// MainLoop
+	void DrawFrame();
+	void CreateSemaphores();
 public:
 	TriangleApplication();
 	TriangleApplication(const int &window_width, const int &window_height, const std::string &window_name);
