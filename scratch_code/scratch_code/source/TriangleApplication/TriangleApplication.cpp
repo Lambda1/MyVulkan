@@ -41,6 +41,8 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// パイプライン破棄
+	vkDestroyPipeline(m_logical_device, m_pipeline, nullptr);
 	// パイプラインレイアウト破棄
 	vkDestroyPipelineLayout(m_logical_device, m_pipeline_layout, nullptr);
 	// レンダーパス破棄
@@ -601,7 +603,34 @@ void TriangleApplication::CreateGraphicsPipeline()
 	pipeline_layout_info.pSetLayouts = nullptr;         // Optional
 	pipeline_layout_info.pushConstantRangeCount = 0;    // Optional
 	pipeline_layout_info.pPushConstantRanges = nullptr; // Optional
+	// パイプラインレイアウト生成
 	if (vkCreatePipelineLayout(m_logical_device, &pipeline_layout_info, nullptr, &m_pipeline_layout) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE PIPELINE LAYOUT."); }
+
+	// パイプライン結合
+	// 固定機能
+	VkGraphicsPipelineCreateInfo pipeline_info = {};
+	pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipeline_info.stageCount = 2;
+	pipeline_info.pStages = shader_stages;
+	pipeline_info.pVertexInputState = &vertex_input_info;
+	pipeline_info.pInputAssemblyState = &input_assembly;
+	pipeline_info.pViewportState = &viewport_info;
+	pipeline_info.pRasterizationState = &rasterizer;
+	pipeline_info.pMultisampleState = &multi_sampling_info;
+	pipeline_info.pDepthStencilState = nullptr; // Optional
+	pipeline_info.pColorBlendState = &color_blending;
+	pipeline_info.pDynamicState = nullptr;      // Optional
+	// パイプラインレイアウト
+	pipeline_info.layout = m_pipeline_layout;
+	// レンダーパス, サブパス
+	pipeline_info.renderPass = m_render_pass;
+	pipeline_info.subpass = 0;
+	// 既存パイプライン設定
+	pipeline_info.basePipelineHandle = VK_NULL_HANDLE; // Optional
+	pipeline_info.basePipelineIndex = -1;              // Optional
+	
+	// パイプライン生成
+	if (vkCreateGraphicsPipelines(m_logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CRATE GRAPHICS PIPELINE."); }
 
 	// シェーダモジュール破棄
 	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
@@ -733,7 +762,7 @@ TriangleApplication::TriangleApplication() :
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_render_pass(), m_pipeline_layout()
+	m_render_pass(), m_pipeline_layout(), m_pipeline()
 {
 
 }
@@ -746,7 +775,7 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_render_pass(), m_pipeline_layout()
+	m_render_pass(), m_pipeline_layout(), m_pipeline()
 {
 
 }

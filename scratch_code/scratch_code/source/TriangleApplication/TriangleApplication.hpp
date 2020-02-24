@@ -76,6 +76,7 @@ private:
 	// Vulkan: Pipeline
 	VkRenderPass m_render_pass;
 	VkPipelineLayout m_pipeline_layout;
+	VkPipeline m_pipeline;
 private:
 	// Vulkan‰Šú‰»
 	void InitVulkan();
