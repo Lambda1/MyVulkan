@@ -77,6 +77,8 @@ private:
 	VkRenderPass m_render_pass;
 	VkPipelineLayout m_pipeline_layout;
 	VkPipeline m_pipeline;
+	// Vulkan: FrameBuffer
+	std::vector<VkFramebuffer> m_swap_chain_frame_buffers;
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -120,6 +122,9 @@ private:
 	VkShaderModule CreateShaderModule(const std::vector<char> &byte_code);
 	// RenderPass
 	void CreateRenderPass();
+
+	// Framebuffer
+	void CreateFrameBuffers();
 
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示

@@ -19,11 +19,12 @@ void TriangleApplication::InitVulkan()
 	CreateSwapChain();
 	// イメージビュー生成
 	CreateImageViews();
-
-	// Graphics Pipelineの組み立て
-	CreateGraphicsPipeline();
 	// レンダーパス
 	CreateRenderPass();
+	// Graphics Pipelineの組み立て
+	CreateGraphicsPipeline();
+	// Framebuffer生成
+	CreateFrameBuffers();
 }
 
 // メインループ
@@ -41,6 +42,8 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// フレームバッファ破棄
+	for (auto frame_buffer : m_swap_chain_frame_buffers) { vkDestroyFramebuffer(m_logical_device, frame_buffer, nullptr); }
 	// パイプライン破棄
 	vkDestroyPipeline(m_logical_device, m_pipeline, nullptr);
 	// パイプラインレイアウト破棄
@@ -665,6 +668,27 @@ void TriangleApplication::CreateRenderPass()
 	render_pass_info.subpassCount = 1;
 	render_pass_info.pSubpasses = &subpass;
 	if (vkCreateRenderPass(m_logical_device, &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE REDER PASS."); }
+}
+// Vulkan: Framebuffer
+void TriangleApplication::CreateFrameBuffers()
+{
+	// Create Framebuffer
+	m_swap_chain_frame_buffers.resize(m_swap_chain_image_views.size());
+	for (size_t i = 0; i < m_swap_chain_image_views.size(); ++i)
+	{
+		VkImageView attachments[] = { m_swap_chain_image_views[i] };
+
+		VkFramebufferCreateInfo frame_buffer_info = {};
+		frame_buffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		frame_buffer_info.renderPass = m_render_pass;
+		frame_buffer_info.attachmentCount = 1;
+		frame_buffer_info.pAttachments = attachments;
+		frame_buffer_info.width = m_swap_chain_extent.width;
+		frame_buffer_info.height = m_swap_chain_extent.height;
+		frame_buffer_info.layers = 1;
+
+		if (vkCreateFramebuffer(m_logical_device, &frame_buffer_info, nullptr, &m_swap_chain_frame_buffers[i]) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE FRAME BUFFERS."); }
+	}
 }
 
 // Vulkan: シェーダ
