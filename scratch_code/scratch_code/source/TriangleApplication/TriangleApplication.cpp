@@ -469,10 +469,49 @@ void TriangleApplication::CreateImageViews()
 // Vulkan: Graphics Pipeline
 void TriangleApplication::CreateGraphicsPipeline()
 {
+	// SPIR-V読み取り
 	auto vert_shader_code = ReadFile(VERT_PATH);
 	auto frag_shader_code = ReadFile(FRAG_PATH);
 
-	std::cout << vert_shader_code.size() << std::endl;
+	// シェーダモジュール生成
+	VkShaderModule vert_shader_module = CreateShaderModule(vert_shader_code);
+	VkShaderModule frag_shader_module = CreateShaderModule(frag_shader_code);
+
+	// パイプラインステージに割り当て
+	// VERT
+	VkPipelineShaderStageCreateInfo vert_shader_stage_info = {};
+	vert_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vert_shader_stage_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vert_shader_stage_info.module = vert_shader_module;
+	vert_shader_stage_info.pName = "main";
+	// FRAG
+	VkPipelineShaderStageCreateInfo frag_shader_stage_info = {};
+	frag_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	frag_shader_stage_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	frag_shader_stage_info.module = frag_shader_module;
+	frag_shader_stage_info.pName = "main";
+
+	// struct
+	VkPipelineShaderStageCreateInfo shader_stages[] = { vert_shader_stage_info, frag_shader_stage_info };
+
+	// シェーダモジュール破棄
+	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
+	vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
+}
+// Vulkan: シェーダ
+VkShaderModule TriangleApplication::CreateShaderModule(const std::vector<char>& byte_code)
+{
+	// パラメータ設定
+	VkShaderModuleCreateInfo create_info = {};
+	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	create_info.codeSize = byte_code.size();
+	create_info.pCode = reinterpret_cast<const uint32_t*>(byte_code.data());
+
+	// シェーダモジュール生成
+	VkShaderModule shader_module;
+	if (vkCreateShaderModule(m_logical_device, &create_info, nullptr, &shader_module) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE SHADER MODULE."); }
+
+	return shader_module;
 }
 
 // Vulkan: 拡張機能のチェック

@@ -113,6 +113,7 @@ private:
 	
 	// GraphichsPipline
 	void CreateGraphicsPipeline();
+	VkShaderModule CreateShaderModule(const std::vector<char> &byte_code);
 
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
