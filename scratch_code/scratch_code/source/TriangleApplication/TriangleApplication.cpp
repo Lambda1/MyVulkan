@@ -51,7 +51,7 @@ void TriangleApplication::CleanUp()
 	// フレームバッファ破棄
 	for (auto frame_buffer : m_swap_chain_frame_buffers) { vkDestroyFramebuffer(m_logical_device, frame_buffer, nullptr); }
 	// パイプライン破棄
-	vkDestroyPipeline(m_logical_device, m_pipeline, nullptr);
+	vkDestroyPipeline(m_logical_device, m_graphics_pipeline, nullptr);
 	// パイプラインレイアウト破棄
 	vkDestroyPipelineLayout(m_logical_device, m_pipeline_layout, nullptr);
 	// レンダーパス破棄
@@ -639,7 +639,7 @@ void TriangleApplication::CreateGraphicsPipeline()
 	pipeline_info.basePipelineIndex = -1;              // Optional
 	
 	// パイプライン生成
-	if (vkCreateGraphicsPipelines(m_logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CRATE GRAPHICS PIPELINE."); }
+	if (vkCreateGraphicsPipelines(m_logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_graphics_pipeline) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CRATE GRAPHICS PIPELINE."); }
 
 	// シェーダモジュール破棄
 	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
@@ -727,7 +727,36 @@ void TriangleApplication::CreateCommandBuffers()
 		begin_info.flags = 0;                  // Optional
 		begin_info.pInheritanceInfo = nullptr; // Optional
 
+		// recording
 		if (vkBeginCommandBuffer(m_command_buffers[i], &begin_info) != VK_SUCCESS) { throw std::runtime_error("FAIELD TO BEGIN RECORDING COMMAND BUFFERS."); }
+	
+		// Starting a render pass
+		VkRenderPassBeginInfo render_pass_info = {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		render_pass_info.renderPass = m_render_pass;
+		render_pass_info.framebuffer = m_swap_chain_frame_buffers[i];
+
+		render_pass_info.renderArea.offset = { 0,0 };
+		render_pass_info.renderArea.extent = m_swap_chain_extent;
+
+		// VK_ATTACHMENT_LOAD_OP_CLEARに使用する設定
+		VkClearValue clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		render_pass_info.clearValueCount = 1;
+		render_pass_info.pClearValues = &clear_color;
+
+		// コマンド記録
+		vkCmdBeginRenderPass(m_command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+		// Graphics Pipelineにバインド
+		vkCmdBindPipeline(m_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphics_pipeline);
+
+		// 描画コマンド
+		// buffer, 頂点数, インスタンスレンダリング時に使用, 頂点バッファオフセット(gl_VertexIndex), レンダリングオフセット(gl_InstanceIndex) 
+		vkCmdDraw(m_command_buffers[i], 3, 1, 0, 0);
+
+		// Finishing Up
+		vkCmdEndRenderPass(m_command_buffers[i]);
+		if (vkEndCommandBuffer(m_command_buffers[i]) != VK_SUCCESS) { throw std::runtime_error("FAILED TO RECORD COMMAND BUFFER."); }
 	}
 }
 
@@ -826,7 +855,7 @@ TriangleApplication::TriangleApplication() :
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_render_pass(), m_pipeline_layout(), m_pipeline(),
+	m_render_pass(), m_pipeline_layout(), m_graphics_pipeline(),
 	m_command_pool()
 {
 
@@ -840,7 +869,7 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_render_pass(), m_pipeline_layout(), m_pipeline(),
+	m_render_pass(), m_pipeline_layout(), m_graphics_pipeline(),
 	m_command_pool()
 {
 

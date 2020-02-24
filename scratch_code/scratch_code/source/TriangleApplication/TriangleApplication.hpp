@@ -76,7 +76,7 @@ private:
 	// Vulkan: Pipeline
 	VkRenderPass m_render_pass;
 	VkPipelineLayout m_pipeline_layout;
-	VkPipeline m_pipeline;
+	VkPipeline m_graphics_pipeline;
 	// Vulkan: FrameBuffer
 	std::vector<VkFramebuffer> m_swap_chain_frame_buffers;
 	// Vulkan: Command
