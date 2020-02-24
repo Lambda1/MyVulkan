@@ -52,6 +52,7 @@ void TriangleApplication::CleanUp()
 	/* --Vulkanの終了処理-- */
 	// セマフォ破棄
 	vkDestroySemaphore(m_logical_device, m_image_available_semaphore, nullptr);
+	vkDestroySemaphore(m_logical_device, m_render_finished_semaphore, nullptr);
 	// 描画コマンド破棄
 	vkDestroyCommandPool(m_logical_device, m_command_pool, nullptr);
 	// フレームバッファ破棄
@@ -854,7 +855,29 @@ void TriangleApplication::CheckPhysicalDeviceInfo(const VkPhysicalDeviceProperti
 // NOTE: スワップチェーンから取得 -> コマンドバッファ実行 -> スワップチェーンに画像を戻す
 void TriangleApplication::DrawFrame()
 {
+	// スワップチェーン設定
+	// NOTE: 論理デバイス, スワップチェーン, タイムアウト(ns), 同期オブジェクト
+	uint32_t image_index;
+	vkAcquireNextImageKHR(m_logical_device, m_swap_chain, UINT64_MAX, m_image_available_semaphore, VK_NULL_HANDLE, &image_index);
 
+	// Submitting the command buffers
+	VkSubmitInfo submit_info = {};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	// 待機するセマフォとパイプラインステージ
+	VkSemaphore wait_semaphores[] = { m_image_available_semaphore };
+	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	submit_info.waitSemaphoreCount = 1;
+	submit_info.pWaitSemaphores = wait_semaphores;
+	submit_info.pWaitDstStageMask = wait_stages;
+	submit_info.commandBufferCount = 1;
+	submit_info.pCommandBuffers = &m_command_buffers[image_index];
+
+	VkSemaphore signal_semaphores[] = { m_render_finished_semaphore };
+	submit_info.signalSemaphoreCount = 1;
+	submit_info.pSignalSemaphores = signal_semaphores;
+
+	if (vkQueueSubmit(m_graphics_queue, 1, &submit_info, VK_NULL_HANDLE) != VK_SUCCESS) { throw std::runtime_error("FAILED TO SUBMIT DRAW COMMAND BUFFER."); }
 }
 // Vulkan: セマフォ生成
 void TriangleApplication::CreateSemaphores()
@@ -862,7 +885,10 @@ void TriangleApplication::CreateSemaphores()
 	// NOTE: 現段階では, sTypeのみ設定(将来的に増えるかも)
 	VkSemaphoreCreateInfo semaphore_info = {};
 	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	if (vkCreateSemaphore(m_logical_device, &semaphore_info, nullptr, &m_image_available_semaphore) != VK_SUCCESS) { throw std::runtime_error("FAIELD TO CREATE SEMAPHORES."); }
+	if (
+		vkCreateSemaphore(m_logical_device, &semaphore_info, nullptr, &m_image_available_semaphore) != VK_SUCCESS ||
+		vkCreateSemaphore(m_logical_device, &semaphore_info, nullptr, &m_render_finished_semaphore) != VK_SUCCESS
+	   ) { throw std::runtime_error("FAIELD TO CREATE SEMAPHORES."); }
 }
 
 /* --public-- */
