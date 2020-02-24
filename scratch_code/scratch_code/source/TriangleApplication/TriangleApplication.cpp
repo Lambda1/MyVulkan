@@ -581,6 +581,13 @@ void TriangleApplication::CreateGraphicsPipeline()
 	color_blending.blendConstants[2] = 0.0f; // Optional
 	color_blending.blendConstants[3] = 0.0f; // Optional
 
+	// Dynamic State
+	VkDynamicState dynamic_states[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH };
+	VkPipelineDynamicStateCreateInfo dynamic_state_info = {};
+	dynamic_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamic_state_info.dynamicStateCount = 2;
+	dynamic_state_info.pDynamicStates = dynamic_states;
+
 	// シェーダモジュール破棄
 	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
 	vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
