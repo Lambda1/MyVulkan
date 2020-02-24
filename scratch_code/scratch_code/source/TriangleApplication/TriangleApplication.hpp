@@ -73,6 +73,8 @@ private:
 	VkExtent2D m_swap_chain_extent;
 	// Vulkan: ImageView
 	std::vector<VkImageView> m_swap_chain_image_views;
+	// Vulkan: Pipeline
+	VkPipelineLayout m_pipeline_layout;
 private:
 	// Vulkan‰Šú‰»
 	void InitVulkan();

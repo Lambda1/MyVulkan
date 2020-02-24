@@ -39,6 +39,8 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// パイプラインレイアウト破棄
+	vkDestroyPipelineLayout(m_logical_device, m_pipeline_layout, nullptr);
 	// イメージビュー破棄
 	for (auto image_view : m_swap_chain_image_views) { vkDestroyImageView(m_logical_device, image_view, nullptr); }
 	// スワップチェーン破棄
@@ -588,6 +590,15 @@ void TriangleApplication::CreateGraphicsPipeline()
 	dynamic_state_info.dynamicStateCount = 2;
 	dynamic_state_info.pDynamicStates = dynamic_states;
 
+	// PipelineLayout
+	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
+	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipeline_layout_info.setLayoutCount = 0;            // Optional
+	pipeline_layout_info.pSetLayouts = nullptr;         // Optional
+	pipeline_layout_info.pushConstantRangeCount = 0;    // Optional
+	pipeline_layout_info.pPushConstantRanges = nullptr; // Optional
+	if (vkCreatePipelineLayout(m_logical_device, &pipeline_layout_info, nullptr, &m_pipeline_layout) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE PIPELINE LAYOUT."); }
+
 	// シェーダモジュール破棄
 	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
 	vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
@@ -686,7 +697,8 @@ TriangleApplication::TriangleApplication() :
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
-	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent()
+	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
+	m_pipeline_layout()
 {
 
 }
@@ -698,7 +710,8 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_physical_device(VK_NULL_HANDLE),
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
-	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent()
+	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
+	m_pipeline_layout()
 {
 
 }
