@@ -79,6 +79,8 @@ private:
 	VkPipeline m_pipeline;
 	// Vulkan: FrameBuffer
 	std::vector<VkFramebuffer> m_swap_chain_frame_buffers;
+	// Vulkan: Command
+	VkCommandPool m_command_pool;
 private:
 	// Vulkan初期化
 	void InitVulkan();
@@ -116,15 +118,15 @@ private:
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	// ImageView設定
 	void CreateImageViews();
-	
 	// GraphichsPipline
 	void CreateGraphicsPipeline();
 	VkShaderModule CreateShaderModule(const std::vector<char> &byte_code);
 	// RenderPass
 	void CreateRenderPass();
-
 	// Framebuffer
 	void CreateFrameBuffers();
+	// CommandPool
+	void CreateCommandPool();
 
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示

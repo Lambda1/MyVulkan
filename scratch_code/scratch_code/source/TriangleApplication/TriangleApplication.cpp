@@ -25,6 +25,8 @@ void TriangleApplication::InitVulkan()
 	CreateGraphicsPipeline();
 	// Framebuffer生成
 	CreateFrameBuffers();
+	// 描画コマンド生成
+	CreateCommandPool();
 }
 
 // メインループ
@@ -690,6 +692,11 @@ void TriangleApplication::CreateFrameBuffers()
 		if (vkCreateFramebuffer(m_logical_device, &frame_buffer_info, nullptr, &m_swap_chain_frame_buffers[i]) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE FRAME BUFFERS."); }
 	}
 }
+// Vulkan: CommandPool
+void TriangleApplication::CreateCommandPool()
+{
+
+}
 
 // Vulkan: シェーダ
 VkShaderModule TriangleApplication::CreateShaderModule(const std::vector<char>& byte_code)
@@ -786,7 +793,8 @@ TriangleApplication::TriangleApplication() :
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_render_pass(), m_pipeline_layout(), m_pipeline()
+	m_render_pass(), m_pipeline_layout(), m_pipeline(),
+	m_command_pool()
 {
 
 }
@@ -799,7 +807,8 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_render_pass(), m_pipeline_layout(), m_pipeline()
+	m_render_pass(), m_pipeline_layout(), m_pipeline(),
+	m_command_pool()
 {
 
 }
