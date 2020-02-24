@@ -27,6 +27,8 @@ void TriangleApplication::InitVulkan()
 	CreateFrameBuffers();
 	// 描画コマンド生成
 	CreateCommandPool();
+	// コマンドバッファ生成
+	CreateCommandBuffers();
 }
 
 // メインループ
@@ -44,6 +46,8 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::CleanUp()
 {
 	/* --Vulkanの終了処理-- */
+	// 描画コマンド破棄
+	vkDestroyCommandPool(m_logical_device, m_command_pool, nullptr);
 	// フレームバッファ破棄
 	for (auto frame_buffer : m_swap_chain_frame_buffers) { vkDestroyFramebuffer(m_logical_device, frame_buffer, nullptr); }
 	// パイプライン破棄
@@ -695,7 +699,25 @@ void TriangleApplication::CreateFrameBuffers()
 // Vulkan: CommandPool
 void TriangleApplication::CreateCommandPool()
 {
-
+	// CommandPool
+	QueueFamilyIndices queue_families_indices = FindQueueFamilies(m_physical_device);
+	VkCommandPoolCreateInfo pool_info = {};
+	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	pool_info.queueFamilyIndex = queue_families_indices.graphics_family.value();
+	pool_info.flags = 0;
+	if (vkCreateCommandPool(m_logical_device, &pool_info, nullptr, &m_command_pool) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE COMMAND POOL."); }
+}
+// Vulkan: コマンドバッファ生成
+void TriangleApplication::CreateCommandBuffers()
+{
+	m_command_buffers.resize(m_swap_chain_frame_buffers.size());
+	// コマンドバッファ生成
+	VkCommandBufferAllocateInfo allocate_info = {};
+	allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	allocate_info.commandPool = m_command_pool;
+	allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocate_info.commandBufferCount = static_cast<uint32_t>(m_command_buffers.size());
+	if (vkAllocateCommandBuffers(m_logical_device, &allocate_info, m_command_buffers.data()) != VK_SUCCESS) { throw std::runtime_error("FAIELD TO CREATE COMMAND BUFFERS."); }
 }
 
 // Vulkan: シェーダ
