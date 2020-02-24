@@ -718,6 +718,17 @@ void TriangleApplication::CreateCommandBuffers()
 	allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	allocate_info.commandBufferCount = static_cast<uint32_t>(m_command_buffers.size());
 	if (vkAllocateCommandBuffers(m_logical_device, &allocate_info, m_command_buffers.data()) != VK_SUCCESS) { throw std::runtime_error("FAIELD TO CREATE COMMAND BUFFERS."); }
+
+	// コマンドバッファの記録
+	for (size_t i = 0; i < m_command_buffers.size(); ++i)
+	{
+		VkCommandBufferBeginInfo begin_info = {};
+		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		begin_info.flags = 0;                  // Optional
+		begin_info.pInheritanceInfo = nullptr; // Optional
+
+		if (vkBeginCommandBuffer(m_command_buffers[i], &begin_info) != VK_SUCCESS) { throw std::runtime_error("FAIELD TO BEGIN RECORDING COMMAND BUFFERS."); }
+	}
 }
 
 // Vulkan: シェーダ
