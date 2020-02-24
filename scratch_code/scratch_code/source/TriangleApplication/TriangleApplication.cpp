@@ -494,6 +494,72 @@ void TriangleApplication::CreateGraphicsPipeline()
 	// struct
 	VkPipelineShaderStageCreateInfo shader_stages[] = { vert_shader_stage_info, frag_shader_stage_info };
 
+	// VertexInput
+	VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
+	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertex_input_info.vertexBindingDescriptionCount = 0;
+	vertex_input_info.pVertexBindingDescriptions = nullptr;   // Optional
+	vertex_input_info.vertexAttributeDescriptionCount = 0;
+	vertex_input_info.pVertexAttributeDescriptions = nullptr; // Optional
+
+	// InputAssembly
+	VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
+	input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	input_assembly.primitiveRestartEnable = VK_FALSE;
+
+	// ViewPort
+	VkViewport view_port = {};
+	view_port.x = 0.0f;
+	view_port.y = 0.0f;
+	view_port.width = static_cast<float>(m_swap_chain_extent.width);
+	view_port.height = static_cast<float>(m_swap_chain_extent.height);
+	view_port.minDepth = 0.0f;
+	view_port.maxDepth = 1.0f;
+
+	// Sissor
+	// NOTE: ViewPortの切り取り範囲
+	VkRect2D sissor = {};
+	sissor.offset = { 0, 0 };
+	sissor.extent = m_swap_chain_extent;
+
+	// Viewport,Sissorの反映
+	VkPipelineViewportStateCreateInfo viewport_info = {};
+	viewport_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewport_info.viewportCount = 1;
+	viewport_info.pViewports = &view_port;
+	viewport_info.scissorCount = 1;
+	viewport_info.pScissors = &sissor;
+
+	// Rasterizer
+	VkPipelineRasterizationStateCreateInfo rasterizer = {};
+	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizer.depthClampEnable = VK_FALSE;
+	rasterizer.rasterizerDiscardEnable = VK_FALSE;
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizer.lineWidth = 1.0f;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizer.depthBiasEnable = VK_FALSE;
+	rasterizer.depthBiasConstantFactor = 0.0f; // Optional
+	rasterizer.depthBiasClamp = 0.0f;          // Optional
+	rasterizer.depthBiasSlopeFactor = 0.0f;    // Optional
+
+	// MultiSampling
+	VkPipelineMultisampleStateCreateInfo multi_sampling_info = {};
+	multi_sampling_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multi_sampling_info.sampleShadingEnable = VK_FALSE;
+	multi_sampling_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	multi_sampling_info.minSampleShading = 1.0f;          // Optional
+	multi_sampling_info.pSampleMask = nullptr;            // Optional
+	multi_sampling_info.alphaToCoverageEnable = VK_FALSE; // Optional
+	multi_sampling_info.alphaToOneEnable = VK_FALSE;      // Optional
+
+	// Depth And Stencil Testing
+	// NOTE: 今は設定しない
+
+	// Color blending
+
 	// シェーダモジュール破棄
 	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
 	vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
