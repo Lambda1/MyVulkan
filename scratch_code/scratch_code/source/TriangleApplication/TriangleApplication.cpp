@@ -22,6 +22,8 @@ void TriangleApplication::InitVulkan()
 
 	// Graphics Pipelineの組み立て
 	CreateGraphicsPipeline();
+	// レンダーパス
+	CreateRenderPass();
 }
 
 // メインループ
@@ -41,6 +43,8 @@ void TriangleApplication::CleanUp()
 	/* --Vulkanの終了処理-- */
 	// パイプラインレイアウト破棄
 	vkDestroyPipelineLayout(m_logical_device, m_pipeline_layout, nullptr);
+	// レンダーパス破棄
+	vkDestroyRenderPass(m_logical_device, m_render_pass, nullptr);
 	// イメージビュー破棄
 	for (auto image_view : m_swap_chain_image_views) { vkDestroyImageView(m_logical_device, image_view, nullptr); }
 	// スワップチェーン破棄
@@ -603,6 +607,37 @@ void TriangleApplication::CreateGraphicsPipeline()
 	vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
 	vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
 }
+// Vulkan: RenderPass
+void TriangleApplication::CreateRenderPass()
+{
+	VkAttachmentDescription color_attachment = {};
+	color_attachment.format = m_swap_chain_image_format;
+	color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	// Subpass
+	VkAttachmentReference color_attachment_ref = {};
+	color_attachment_ref.attachment = 0;
+	color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	
+	VkSubpassDescription subpass = {};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &color_attachment_ref;
+
+	// Render Pass
+	VkRenderPassCreateInfo render_pass_info = {};
+	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	render_pass_info.attachmentCount = 1;
+	render_pass_info.pAttachments = &color_attachment;
+	render_pass_info.subpassCount = 1;
+	render_pass_info.pSubpasses = &subpass;
+	if (vkCreateRenderPass(m_logical_device, &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS) { throw std::runtime_error("FAILED TO CREATE REDER PASS."); }
+}
+
 // Vulkan: シェーダ
 VkShaderModule TriangleApplication::CreateShaderModule(const std::vector<char>& byte_code)
 {
@@ -698,7 +733,7 @@ TriangleApplication::TriangleApplication() :
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_pipeline_layout()
+	m_render_pass(), m_pipeline_layout()
 {
 
 }
@@ -711,7 +746,7 @@ TriangleApplication::TriangleApplication(const int& width, const int& height, co
 	m_logical_device(),
 	m_graphics_queue(), m_present_queue(),
 	m_swap_chain(), m_swap_chain_image_format(), m_swap_chain_extent(),
-	m_pipeline_layout()
+	m_render_pass(), m_pipeline_layout()
 {
 
 }

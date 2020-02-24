@@ -74,6 +74,7 @@ private:
 	// Vulkan: ImageView
 	std::vector<VkImageView> m_swap_chain_image_views;
 	// Vulkan: Pipeline
+	VkRenderPass m_render_pass;
 	VkPipelineLayout m_pipeline_layout;
 private:
 	// Vulkan初期化
@@ -116,6 +117,8 @@ private:
 	// GraphichsPipline
 	void CreateGraphicsPipeline();
 	VkShaderModule CreateShaderModule(const std::vector<char> &byte_code);
+	// RenderPass
+	void CreateRenderPass();
 
 	// Debug: 詳細情報表示関係
 	// 拡張機能表示
