@@ -1,0 +1,109 @@
+\documentclass{suribt}
+
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{here}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{siunitx}
+\usepackage{url}
+
+\usepackage{listings,jlisting}
+
+\renewcommand{\lstlistingname}{リスト}
+\lstset{
+	language=c,
+	basicstyle=\ttfamily\scriptsize,
+	commentstyle=\textit,
+	classoffset=1,
+	keywordstyle=\bfseries,
+	frame=tRBl,
+	framesep=5pt,
+	showstringspaces=false,
+	numbers=left,
+	stepnumber=1,
+	numberstyle=\tiny,
+	tabsize=2
+}
+
+\title{VulkanやCGに関するメモ}
+\author{Lambda1}
+\supervisor{}
+\studentid{}
+\handin{2020}{03}
+\keywords{Vulkan, Computer Graphics}
+
+\begin{document}
+\maketitle
+\frontmatter
+
+\begin{abstract}
+	色々なメモ
+\end{abstract}
+
+\tableofcontents
+
+\mainmatter
+\chapter{はじめに}\label{chap:1}
+\section{Vulkanとは}
+	Khronos GroupがSIGGRAPH2014で発表した「クロスプラットフォーム3Dコンピュータグラフィックス・コンピュートAPI」であり, ハードウェアの限界性能を引き出すために開発されたローレベルAPIである.
+\subsection{特徴}
+\begin{itemize}
+	\item プログラマが意図した動作を明確(explicit)に指定することでドライバ・オーバヘッドの削減
+	\item コマンド作成とサブミットをマルチスレッドで並列化
+	\item SPIR-Vによって, シェーダプログラムをバイトコードに変換することで編集を効率化(SPIR-Vで吐き出された中間言語ならGLSL, HLSLとかなんでもおｋ)
+\end{itemize}
+\newpage
+\section{三角形描画までの道のり}
+	いわゆるグラフィック版「hello, world!」.
+	基本的な詳細はVulkan Tutorialを参照\cite{1-a}.
+\begin{enumerate}
+	\item Instance and physical device selection\\
+		1. インスタンス(VkInstance)作成\\
+		2. サポートしているグラフィックカード(VkPhysicalDevice)選択
+	\item Logical device and queue families\\
+		描画のために論理デバイス(VkDevice)とキューファミリ(VkQueue)作成
+	\item Window surface and swap chain\\
+		ウィンドウサーフェスとスワップチェーン作成
+	\item Image views and framebuffers\\
+		スワップチェーンイメージをVkImageView内にラップ
+	\item Render passes\\
+		レンダーターゲットとレンダーパス作成
+	\item Graphics pipeline\\
+		グラフィックスパイプラインを構築
+	\item Command pools and command buffers\\
+		利用可能なスワップチェーンイメージにドローコマンドのコマンドバッファの割り当てと記録
+	\item main loop\\
+		取得済みイメージからバッファの描画, 正しいドローコマンドバッファのサブミット, スワップチェーンにイメージ返却
+\end{enumerate}
+\newpage
+
+\chapter{CG 用語集}\label{chap:2}
+\section{A}
+
+\newpage
+\chapter{Vulkan 用語集}\label{chap:3}
+\section{vkCreate(name)関数}
+	Vulkanオブジェクト生成のための生成関数.
+	パラメータ設定したVK(name)CreateInfo構造体を引数として使用する.
+\section{Vk(name)CreateInfo構造体}
+	オブジェクト設定を行うための構造体.
+
+\newpage
+\chapter{ライブラリ 用語集}\label{chap:3}
+\section{GLFW3}
+
+\backmatter
+
+\begin{thebibliography}{}
+\bibitem{1-a}
+	Alexander Overvoorde,
+	``Vulkan Tutorial'',\\
+	\url{https://vulkan-tutorial.com}, 2020/02/25(閲覧).
+\end{thebibliography}
+
+\appendix
+\chapter{プログラムリスト}
+\section{モデル}
+
+\end{document}
